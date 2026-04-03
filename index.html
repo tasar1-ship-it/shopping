@@ -71,6 +71,16 @@ input::placeholder{color:#4A7573}
 .ems{color:#3D6563;font-size:11px;margin-top:3px}
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;cursor:pointer}
 .overlay img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
+.hb{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0}
+.help-ov{position:fixed;top:0;left:0;right:0;bottom:0;background:#142E2D;z-index:1000;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.help-hd{position:sticky;top:0;background:#142E2D;padding:48px 20px 12px;display:flex;justify-content:space-between;align-items:center;z-index:1}
+.help-ti{font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;font-weight:500;color:#fff}
+.help-x{width:36px;height:36px;border-radius:50%;background:#1B3937;border:none;color:#0ABAB5;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.help-body{padding:0 20px 40px}
+.help-card{background:#1B3937;border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.help-n{font-size:14px;font-weight:600;color:#0ABAB5;margin:0 0 8px}
+.help-en{font-size:13px;color:#D4EEEC;margin:0 0 6px;line-height:1.5}
+.help-ko{font-size:13px;color:#088F8B;margin:0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -195,7 +205,7 @@ function R(){
   for(var i=0;i<shop.length;i++){if(shop[i].done)dn.push(shop[i]);else act.push(shop[i]);}
   var selCt=0;for(var i=0;i<tmpl.length;i++){if(tmpl[i].selected)selCt++;}
 
-  var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button></div><div class="ts">';
+  var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><div style="display:flex;gap:6px"><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button><button class="hb" onclick="showHelp()">?</button></div></div><div class="ts">';
   var tabs=[['template',t.tmpl,tmpl.length],['shopping',t.shop,act.length],['completed',t.comp,dn.length]];
   for(var i=0;i<tabs.length;i++){
     var k=tabs[i][0],l=tabs[i][1],n=tabs[i][2];
@@ -410,6 +420,57 @@ function tgV(){
   }
 }
 function showVM(m){vmsg=m;R();clearTimeout(vtm);vtm=setTimeout(function(){vmsg=null;R()},3500)}
+
+function showHelp(){
+  var d=document.createElement('div');
+  d.className='help-ov';
+  d.innerHTML='<div class="help-hd"><div class="help-ti">Manual / \uC0AC\uC6A9 \uC124\uBA85\uC11C</div><button class="help-x" onclick="this.parentNode.parentNode.remove()">\u2715</button></div>'
+  +'<div class="help-body">'
+
+  +'<div class="help-card"><div class="help-n">\u2460 Template \u2014 \uAE30\uBCF8 \uBAA9\uB85D</div>'
+  +'<div class="help-en">Add all items you regularly buy. They stay permanently until you delete them. Each item has a checkbox, quantity (+/\u2212), and a delete button (\u2715).</div>'
+  +'<div class="help-ko">\uAE30\uBCF8 \uBAA9\uB85D \uD0ED\uC5D0\uC11C \uC790\uC8FC \uC0AC\uB294 \uD56D\uBAA9\uC744 \uCD94\uAC00\uD558\uC138\uC694. \uC0AD\uC81C\uD558\uAE30 \uC804\uAE4C\uC9C0 \uC601\uAD6C \uC800\uC7A5\uB429\uB2C8\uB2E4. \uAC01 \uD56D\uBAA9\uC5D0 \uCCB4\uD06C\uBC15\uC2A4, \uC218\uB7C9 (+/\u2212), \uC0AD\uC81C \uBC84\uD2BC\uC774 \uC788\uC2B5\uB2C8\uB2E4.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2461 Start shopping \u2014 \uC7A5\uBCF4\uAE30 \uC2DC\uC791</div>'
+  +'<div class="help-en">Uncheck items you don\'t need this trip. Adjust quantities. Tap "Start Shopping" to generate your shopping list.</div>'
+  +'<div class="help-ko">\uC774\uBC88\uC5D0 \uD544\uC694 \uC5C6\uB294 \uD56D\uBAA9\uC740 \uCCB4\uD06C \uD574\uC81C\uD558\uC138\uC694. \uC218\uB7C9\uC744 \uC870\uC808\uD55C \uD6C4 "\uC7A5\uBCF4\uAE30 \uC2DC\uC791"\uC744 \uB20C\uB7EC \uBAA9\uB85D\uC744 \uC0DD\uC131\uD558\uC138\uC694.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2462 Shopping tab \u2014 \uC7A5\uBCF4\uAE30</div>'
+  +'<div class="help-en">Tap an item to check it off \u2014 it moves to Completed. You can still add extra items using the input field, camera, or voice.</div>'
+  +'<div class="help-ko">\uD56D\uBAA9\uC744 \uD0ED\uD558\uBA74 \uCCB4\uD06C \uD45C\uC2DC\uB418\uACE0 \uC644\uB8CC \uD0ED\uC73C\uB85C \uC774\uB3D9\uD569\uB2C8\uB2E4. \uC785\uB825\uB780, \uCE74\uBA54\uB77C, \uC74C\uC131\uC73C\uB85C \uCD94\uAC00 \uD56D\uBAA9\uC744 \uB123\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2463 Completed \u2014 \uC644\uB8CC \uD56D\uBAA9</div>'
+  +'<div class="help-en">Shows checked-off items. Tap any item to restore it. "Restore All" sends everything back to the shopping list.</div>'
+  +'<div class="help-ko">\uC644\uB8CC\uB41C \uD56D\uBAA9\uC774 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uD56D\uBAA9\uC744 \uD0ED\uD558\uBA74 \uBCF5\uC6D0\uB429\uB2C8\uB2E4. "\uC804\uCCB4 \uBCF5\uC6D0"\uC73C\uB85C \uBAA8\uB450 \uB418\uB3CC\uB9B4 \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2464 Voice \u2014 \uC74C\uC131 \uC785\uB825</div>'
+  +'<div class="help-en">Tap mic once \u2014 stays active. Speak an item, pause \u2014 auto-added. Keep talking for more items. Tap mic again to stop. Follows your EN/KO language toggle.</div>'
+  +'<div class="help-ko">\uB9C8\uC774\uD06C\uB97C \uD55C \uBC88 \uD0ED \u2192 \uACC4\uC18D \uD65C\uC131\uD654. \uD56D\uBAA9\uC744 \uB9D0\uD558\uACE0 \uC7A0\uC2DC \uBA48\uCD94\uBA74 \u2192 \uC790\uB3D9 \uCD94\uAC00. \uACC4\uC18D \uB9D0\uD558\uC138\uC694. \uB9C8\uC774\uD06C\uB97C \uB2E4\uC2DC \uD0ED\uD558\uBA74 \uC885\uB8CC. \uD55C/\uC601 \uC804\uD658\uC744 \uB530\uB985\uB2C8\uB2E4.</div>'
+  +'<div style="margin-top:8px;padding:8px 10px;background:#123F3D;border-radius:8px;font-size:12px;color:#4A7573">Not understood? \u2192 "Say again / \uB2E4\uC2DC \uB9D0\uC500\uD574\uC8FC\uC138\uC694"</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2465 Camera \u2014 \uCE74\uBA54\uB77C</div>'
+  +'<div class="help-en">Tap camera icon \u2192 take a photo or choose from library. Photo attaches to the next item you add. Tap any thumbnail to view full size. Tap anywhere to close.</div>'
+  +'<div class="help-ko">\uCE74\uBA54\uB77C \uC544\uC774\uCF58\uC744 \uD0ED \u2192 \uC0AC\uC9C4\uC744 \uCC0D\uAC70\uB098 \uB77C\uC774\uBE0C\uB7EC\uB9AC\uC5D0\uC11C \uC120\uD0DD. \uC0AC\uC9C4\uC740 \uB2E4\uC74C \uD56D\uBAA9\uC5D0 \uCCA8\uBD80\uB429\uB2C8\uB2E4. \uBBF8\uB9AC\uBCF4\uAE30\uB97C \uD0ED\uD558\uBA74 \uC804\uCCB4 \uD06C\uAE30\uB85C \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2466 Auto-categories \u2014 \uC790\uB3D9 \uBD84\uB958</div>'
+  +'<div class="help-en">Items auto-sort into 28 categories (Produce, Meat, Dairy, Household, etc.) as you type or speak. 500+ keywords recognized in English and Korean.</div>'
+  +'<div class="help-ko">\uD56D\uBAA9\uC744 \uC785\uB825\uD558\uBA74 28\uAC1C \uCE74\uD14C\uACE0\uB9AC(\uB18D\uC0B0\uBB3C, \uC721\uB958, \uC720\uC81C\uD488, \uC0DD\uD65C\uC6A9\uD488 \uB4F1)\uB85C \uC790\uB3D9 \uBD84\uB958\uB429\uB2C8\uB2E4. \uD55C\uAD6D\uC5B4/\uC601\uC5B4 500\uAC1C \uC774\uC0C1\uC758 \uD0A4\uC6CC\uB4DC\uB97C \uC778\uC2DD\uD569\uB2C8\uB2E4.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2467 Language \u2014 \uC5B8\uC5B4 \uC804\uD658</div>'
+  +'<div class="help-en">Tap \uD55C\uAD6D\uC5B4 / English in the header. Switches all labels, categories, and voice recognition language instantly.</div>'
+  +'<div class="help-ko">\uD5E4\uB354\uC758 \uC5B8\uC5B4 \uBC84\uD2BC\uC744 \uD0ED\uD558\uC138\uC694. \uBAA8\uB4E0 \uB77C\uBCA8, \uCE74\uD14C\uACE0\uB9AC, \uC74C\uC131 \uC778\uC2DD \uC5B8\uC5B4\uAC00 \uC989\uC2DC \uC804\uD658\uB429\uB2C8\uB2E4.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2468 Data \u2014 \uB370\uC774\uD130 \uC800\uC7A5</div>'
+  +'<div class="help-en">Your lists are saved in the browser. Close Safari, come back \u2014 everything is still there. To reset: clear Safari website data in Settings.</div>'
+  +'<div class="help-ko">\uBAA9\uB85D\uC740 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uC800\uC7A5\uB429\uB2C8\uB2E4. Safari\uB97C \uB2EB\uC558\uB2E4 \uB2E4\uC2DC \uC5F4\uC5B4\uB3C4 \uC720\uC9C0\uB429\uB2C8\uB2E4. \uCD08\uAE30\uD654: \uC124\uC815\uC5D0\uC11C Safari \uC6F9\uC0AC\uC774\uD2B8 \uB370\uC774\uD130 \uC0AD\uC81C.</div></div>'
+
+  +'<div class="help-card"><div class="help-n">\u2469 Home screen \u2014 \uD648 \uD654\uBA74 \uCD94\uAC00</div>'
+  +'<div class="help-en">In Safari, tap share (\u2191) \u2192 "Add to Home Screen". Opens full-screen like a native app \u2014 no Safari toolbar.</div>'
+  +'<div class="help-ko">Safari\uC5D0\uC11C \uACF5\uC720 \uBC84\uD2BC(\u2191) \uD0ED \u2192 "\uD648 \uD654\uBA74\uC5D0 \uCD94\uAC00". Safari \uB3C4\uAD6C \uBAA8\uC74C \uC5C6\uC774 \uC804\uCCB4 \uD654\uBA74\uC73C\uB85C \uC5F4\uB9BD\uB2C8\uB2E4.</div></div>'
+
+  +'</div>';
+  document.body.appendChild(d);
+}
 
 R();
 
