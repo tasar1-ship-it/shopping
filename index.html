@@ -8,388 +8,387 @@
 <meta name="theme-color" content="#0ABAB5">
 <title>Shopping List</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230ABAB5' width='100' height='100' rx='22'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white'>🛒</text></svg>">
+<link rel="apple-touch-icon" href="icon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--t:#0ABAB5;--td:#088F8B;--tl:#123F3D;--bg:#142E2D;--card:#1B3937;--text:#E0F5F4;--muted:#4A7573;--dim:#3D6563}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
-body{max-width:480px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom)}
-input::placeholder{color:var(--muted)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes checkOff{0%{opacity:1;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}100%{opacity:.3;transform:scale(.97)}}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(10,186,181,.5)}70%{box-shadow:0 0 0 10px rgba(10,186,181,0)}100%{box-shadow:0 0 0 0 rgba(10,186,181,0)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
-.header{background:linear-gradient(165deg,var(--t) 0%,var(--td) 100%);padding:48px 20px 0;border-radius:0 0 24px 24px;box-shadow:0 8px 32px rgba(10,186,181,.25)}
-.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-.title{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#fff;letter-spacing:.02em;line-height:1.1}
-.subtitle{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;letter-spacing:.04em}
-.lang-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
-.tabs{display:flex;margin-top:4px}
-.tab{flex:1;background:none;border:none;color:rgba(255,255,255,.45);padding:10px 0;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'DM Sans',sans-serif}
-.tab.active{color:#fff;border-bottom-color:#fff}
-.badge{background:#fff;color:var(--td);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
-.badge-m{background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
-
-.input-area{padding:14px 16px 4px}
-.input-row{display:flex;gap:5px;align-items:center}
-.input-row input[type="text"]{flex:1;padding:11px 13px;border-radius:12px;border:1.5px solid var(--tl);font-size:14px;outline:none;background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif}
-.icon-btn{width:38px;height:38px;border-radius:11px;border:1.5px solid var(--tl);background:var(--card);color:var(--t);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.icon-btn.mic-active{background:var(--t);color:#fff;border-color:var(--t);animation:pulse 1.2s ease infinite}
-.add-btn{padding:11px 14px;border-radius:12px;border:none;background:var(--t);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
-.voice-toast{margin-top:6px;padding:7px 12px;border-radius:9px;background:var(--tl);color:var(--t);font-size:11px;font-weight:500;display:flex;align-items:center;gap:7px}
-.voice-dot{width:7px;height:7px;border-radius:50%;background:#ff4444;animation:blink 1s ease infinite}
-.photo-preview{margin-top:6px;display:flex;align-items:center;gap:6px}
-.photo-preview img{width:44px;height:44px;border-radius:9px;object-fit:cover;border:2px solid var(--tl)}
-.photo-preview button{background:rgba(255,255,255,.08);border:none;border-radius:7px;width:24px;height:24px;font-size:12px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
-
-.list-area{padding:4px 16px 32px}
-.template-actions{display:flex;gap:6px;align-items:center;padding:8px 0 4px;flex-wrap:wrap}
-.sm-btn{background:var(--tl);border:none;color:var(--t);padding:5px 10px;border-radius:9px;font-size:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
-.start-btn{background:var(--t);border:none;color:#fff;padding:7px 14px;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;margin-left:auto}
-
-.cat-group{margin-top:14px}
-.cat-header{display:flex;align-items:center;gap:7px;margin-bottom:5px;padding-left:3px}
-.cat-dot{width:7px;height:7px;border-radius:50%;background:var(--t);flex-shrink:0}
-.cat-name{font-size:10px;font-weight:600;color:var(--t);letter-spacing:.05em;text-transform:uppercase;flex:1}
-.cat-count{font-size:10px;color:var(--dim);font-weight:500}
-
-.item{display:flex;align-items:center;gap:9px;padding:10px 11px;background:var(--card);border-radius:12px;margin-bottom:4px;animation:fadeIn .3s ease forwards;opacity:0}
-.item.clickable{cursor:pointer}
-.item.checking{animation:checkOff .6s ease forwards!important}
-
-.check-circle{width:20px;height:20px;border-radius:50%;border:2px solid #2A5553;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-.check-circle.on{background:var(--t);border-color:var(--t)}
-.select-box{width:20px;height:20px;border-radius:5px;border:2px solid #2A5553;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:transparent}
-.select-box.on{background:var(--t);border-color:var(--t)}
-
-.item-text{flex:1;font-size:13px;color:#D4EEEC;line-height:1.3}
-.item-text.off{color:var(--dim);text-decoration:line-through}
-.item-text.done{color:var(--dim);text-decoration:line-through}
-
-.qty-ctrl{display:flex;align-items:center;gap:1px;flex-shrink:0}
-.qty-btn{width:24px;height:24px;border-radius:7px;border:none;background:var(--tl);color:var(--t);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.qty-num{width:22px;text-align:center;font-size:13px;font-weight:600;color:var(--text)}
-.qty-badge{background:var(--tl);color:var(--t);font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;flex-shrink:0}
-
-.del-btn{width:26px;height:26px;border-radius:7px;border:none;background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.thumb{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1.5px solid var(--tl);flex-shrink:0}
-
-.restore-bar{padding:6px 0 4px}
-.restore-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:9px 0;border-radius:11px;border:1.5px solid var(--t);background:var(--tl);color:var(--t);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;gap:5px}
-.completed-item{opacity:.55}
-
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;color:var(--muted);font-size:13px;text-align:center}
-.empty .sub{color:var(--dim);font-size:11px;margin-top:3px}
-.empty svg{margin-bottom:10px;opacity:.4}
+html,body{background:#142E2D;font-family:'DM Sans',sans-serif;color:#E0F5F4;min-height:100vh;overflow-x:hidden}
+body{max-width:480px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,20px)}
+input::placeholder{color:#4A7573}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes co{0%{opacity:1;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}100%{opacity:.3;transform:scale(.97)}}
+@keyframes pu{0%{box-shadow:0 0 0 0 rgba(10,186,181,.5)}70%{box-shadow:0 0 0 10px rgba(10,186,181,0)}100%{box-shadow:0 0 0 0 rgba(10,186,181,0)}}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+.hd{background:linear-gradient(165deg,#0ABAB5,#088F8B);padding:48px 20px 0;border-radius:0 0 24px 24px;box-shadow:0 8px 32px rgba(10,186,181,.25)}
+.ht{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.ti{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#fff;letter-spacing:.02em;line-height:1.1}
+.su{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;letter-spacing:.04em}
+.lb{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.ts{display:flex;margin-top:4px}
+.tb{flex:1;background:none;border:none;color:rgba(255,255,255,.45);padding:10px 0;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit}
+.tb.a{color:#fff;border-bottom-color:#fff}
+.bg{background:#fff;color:#088F8B;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+.bm{background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+.ia{padding:14px 16px 4px}
+.ir{display:flex;gap:5px;align-items:center}
+.ir input[type=text]{flex:1;padding:11px 13px;border-radius:12px;border:1.5px solid #123F3D;font-size:14px;outline:none;background:#1B3937;color:#E0F5F4;font-family:inherit}
+.ib{width:38px;height:38px;border-radius:11px;border:1.5px solid #123F3D;background:#1B3937;color:#0ABAB5;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.ma{background:#0ABAB5;color:#fff;border-color:#0ABAB5;animation:pu 1.2s ease infinite}
+.ab{padding:11px 14px;border-radius:12px;border:none;background:#0ABAB5;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0}
+.vt{margin-top:6px;padding:7px 12px;border-radius:9px;background:#123F3D;color:#0ABAB5;font-size:11px;font-weight:500;display:flex;align-items:center;gap:7px}
+.vd{width:7px;height:7px;border-radius:50%;background:#ff4444;animation:bl 1s ease infinite}
+.pp{margin-top:6px;display:flex;align-items:center;gap:6px}
+.pp img{width:44px;height:44px;border-radius:9px;object-fit:cover;border:2px solid #123F3D}
+.pp button{background:rgba(255,255,255,.08);border:none;border-radius:7px;width:24px;height:24px;font-size:12px;cursor:pointer;color:#4A7573;display:flex;align-items:center;justify-content:center}
+.la{padding:4px 16px 32px}
+.ta{display:flex;gap:6px;align-items:center;padding:8px 0 4px;flex-wrap:wrap}
+.sb{background:#123F3D;border:none;color:#0ABAB5;padding:5px 10px;border-radius:9px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit}
+.stb{background:#0ABAB5;border:none;color:#fff;padding:7px 14px;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:auto}
+.cg{margin-top:14px}
+.ch{display:flex;align-items:center;gap:7px;margin-bottom:5px;padding-left:3px}
+.cd{width:7px;height:7px;border-radius:50%;background:#0ABAB5;flex-shrink:0}
+.cn{font-size:10px;font-weight:600;color:#0ABAB5;letter-spacing:.05em;text-transform:uppercase;flex:1}
+.cc{font-size:10px;color:#3D6563;font-weight:500}
+.it{display:flex;align-items:center;gap:9px;padding:10px 11px;background:#1B3937;border-radius:12px;margin-bottom:4px;animation:fi .3s ease forwards;opacity:0}
+.ck{cursor:pointer}
+.cki{animation:co .6s ease forwards !important}
+.ci{width:20px;height:20px;border-radius:50%;border:2px solid #2A5553;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.ci.on{background:#0ABAB5;border-color:#0ABAB5}
+.sx{width:20px;height:20px;border-radius:5px;border:2px solid #2A5553;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:transparent}
+.sx.on{background:#0ABAB5;border-color:#0ABAB5}
+.tx{flex:1;font-size:13px;color:#D4EEEC;line-height:1.3}
+.tx.off{color:#3D6563;text-decoration:line-through}
+.qc{display:flex;align-items:center;gap:1px;flex-shrink:0}
+.qb{width:24px;height:24px;border-radius:7px;border:none;background:#123F3D;color:#0ABAB5;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qn{width:22px;text-align:center;font-size:13px;font-weight:600;color:#E0F5F4}
+.qg{background:#123F3D;color:#0ABAB5;font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;flex-shrink:0}
+.db{width:26px;height:26px;border-radius:7px;border:none;background:transparent;color:#3D6563;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.th{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1.5px solid #123F3D;flex-shrink:0;cursor:pointer}
+.rb{padding:6px 0 4px}
+.rbtn{display:flex;align-items:center;justify-content:center;width:100%;padding:9px 0;border-radius:11px;border:1.5px solid #0ABAB5;background:#123F3D;color:#0ABAB5;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;gap:5px}
+.cpl{opacity:.55}
+.em{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;color:#4A7573;font-size:13px;text-align:center}
+.ems{color:#3D6563;font-size:11px;margin-top:3px}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;cursor:pointer}
+.overlay img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-// ─── DATA ───
-const LANG={
-en:{title:"Shopping List",subtitle:"Curated with care",ph:"Add an item…",add:"Add",completed:"Completed",shopping:"Shopping",template:"Template",reset:"Restore All",empty:"Your list is empty",emptyC:"No completed items",emptyT:"Build your standard list",emptyTS:"Add items you regularly buy",start:"Start Shopping",selAll:"Select All",deAll:"Deselect All",listening:"Listening…",voiceNA:"Voice not available here. Deploy to HTTPS.",micDenied:"Please allow microphone access",voiceErr:"Voice error. Try again.",cats:{"Produce":"Produce","Fresh Herbs & Aromatics":"Fresh Herbs & Aromatics","Meat":"Meat","Poultry":"Poultry","Fish & Seafood":"Fish & Seafood","Charcuterie & Cured Meats":"Charcuterie & Cured Meats","Eggs":"Eggs","Chilled & Dairy":"Chilled & Dairy","Plant-Based Chilled":"Plant-Based Chilled","Bread & Bakery":"Bread & Bakery","Breakfast Foods":"Breakfast Foods","Pantry Staples":"Pantry Staples","Rice, Pasta, Grains & Legumes":"Rice, Pasta, Grains & Legumes","Oils, Vinegars & Condiments":"Oils, Vinegars & Condiments","Canned & Preserved Goods":"Canned & Preserved Goods","Frozen Foods":"Frozen Foods","Snacks":"Snacks","Sweets & Desserts":"Sweets & Desserts","Water, Juices & Soft Drinks":"Water, Juices & Soft Drinks","Coffee, Tea & Specialty":"Coffee, Tea & Specialty","Wine, Beer & Spirits":"Wine, Beer & Spirits","Ready-Made & Convenience":"Ready-Made & Convenience","Special Diet & Health":"Special Diet & Health","Household":"Household","Personal Care":"Personal Care","Baby & Kids":"Baby & Kids","Pet":"Pet","Other":"Other"}},
-ko:{title:"장보기 목록",subtitle:"정성껏 준비한 리스트",ph:"항목 추가…",add:"추가",completed:"완료 항목",shopping:"장보기",template:"기본 목록",reset:"전체 복원",empty:"목록이 비어 있습니다",emptyC:"완료된 항목이 없습니다",emptyT:"기본 목록을 만드세요",emptyTS:"자주 사는 항목을 추가하세요",start:"장보기 시작",selAll:"전체 선택",deAll:"전체 해제",listening:"듣고 있습니다...",voiceNA:"이 환경에서는 음성 입력 불가. HTTPS에서 사용 가능.",micDenied:"마이크 권한을 허용해주세요",voiceErr:"음성 인식 오류. 다시 시도해주세요.",cats:{"Produce":"농산물","Fresh Herbs & Aromatics":"허브 & 향신료","Meat":"육류","Poultry":"가금류","Fish & Seafood":"생선 & 해산물","Charcuterie & Cured Meats":"샤퀴테리 & 가공육","Eggs":"계란","Chilled & Dairy":"유제품","Plant-Based Chilled":"식물성 대체식품","Bread & Bakery":"빵 & 베이커리","Breakfast Foods":"아침식사","Pantry Staples":"식료품 기본","Rice, Pasta, Grains & Legumes":"쌀, 면, 곡물 & 콩류","Oils, Vinegars & Condiments":"기름, 식초 & 양념","Canned & Preserved Goods":"통조림 & 저장식품","Frozen Foods":"냉동식품","Snacks":"간식","Sweets & Desserts":"과자 & 디저트","Water, Juices & Soft Drinks":"물, 주스 & 음료","Coffee, Tea & Specialty":"커피, 차 & 음료","Wine, Beer & Spirits":"와인, 맥주 & 주류","Ready-Made & Convenience":"즉석식품","Special Diet & Health":"건강 & 특수식품","Household":"생활용품","Personal Care":"개인관리","Baby & Kids":"유아용품","Pet":"반려동물","Other":"기타"}}
+
+var T={
+en:{title:"Shopping List",sub:"Curated with care",ph:"Add an item...",add:"Add",comp:"Completed",shop:"Shopping",tmpl:"Template",reset:"Restore All",empty:"Your list is empty",emptyC:"No completed items",emptyT:"Build your standard list",emptyTS:"Add items you regularly buy",start:"Start Shopping",selA:"Select All",deA:"Deselect All",listen:"Listening...",noVoice:"Voice needs HTTPS. Deploy to GitHub Pages.",micNo:"Allow microphone access",voiceE:"Voice error. Try again."},
+ko:{title:"\uC7A5\uBCF4\uAE30 \uBAA9\uB85D",sub:"\uC815\uC131\uAF43 \uC900\uBE44\uD55C \uB9AC\uC2A4\uD2B8",ph:"\uD56D\uBAA9 \uCD94\uAC00...",add:"\uCD94\uAC00",comp:"\uC644\uB8CC \uD56D\uBAA9",shop:"\uC7A5\uBCF4\uAE30",tmpl:"\uAE30\uBCF8 \uBAA9\uB85D",reset:"\uC804\uCCB4 \uBCF5\uC6D0",empty:"\uBAA9\uB85D\uC774 \uBE44\uC5B4 \uC788\uC2B5\uB2C8\uB2E4",emptyC:"\uC644\uB8CC\uB41C \uD56D\uBAA9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",emptyT:"\uAE30\uBCF8 \uBAA9\uB85D\uC744 \uB9CC\uB4DC\uC138\uC694",emptyTS:"\uC790\uC8FC \uC0AC\uB294 \uD56D\uBAA9\uC744 \uCD94\uAC00\uD558\uC138\uC694",start:"\uC7A5\uBCF4\uAE30 \uC2DC\uC791",selA:"\uC804\uCCB4 \uC120\uD0DD",deA:"\uC804\uCCB4 \uD574\uC81C",listen:"\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...",noVoice:"HTTPS\uD544\uC694. GitHub Pages\uC5D0\uC11C \uC0AC\uC6A9 \uAC00\uB2A5.",micNo:"\uB9C8\uC774\uD06C \uAD8C\uD55C\uC744 \uD5C8\uC6A9\uD574\uC8FC\uC138\uC694",voiceE:"\uC74C\uC131 \uC778\uC2DD \uC624\uB958. \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694."}
 };
 
-const RULES=[
-["Fresh Herbs & Aromatics","basil cilantro coriander parsley mint dill rosemary thyme oregano chive tarragon sage bay leaf lemongrass curry leaf herb fresh herb bouquet garni 바질 고수 파슬리 민트 딜 로즈마리 타임 오레가노 허브"],
-["Poultry","chicken turkey duck goose quail cornish hen poultry wing thigh drumstick breast giblet 닭 칠면조 오리 가금 닭가슴살 닭날개 닭다리"],
-["Fish & Seafood","salmon tuna cod halibut trout sea bass tilapia mackerel sardine anchovy swordfish mahi snapper haddock sole monkfish shrimp prawn crab lobster mussel clam oyster scallop squid calamari octopus fish seafood 연어 참치 대구 고등어 새우 게 조개 오징어 문어 생선 해산물 굴 가리비 랍스터"],
-["Charcuterie & Cured Meats","prosciutto salami chorizo pepperoni mortadella bresaola pancetta coppa nduja sobrasada jamón jamon serrano iberico ibérico fuet longaniza bratwurst wurst cold cut cured smoked meat smoked ham smoked turkey pastrami corned beef pâté pate terrine rillette deli meat sliced meat 살라미 초리조 하몽 훈제 프로슈토"],
-["Meat","beef pork steak lamb veal venison rabbit bison goat ground meat mince minced fillet filet cutlet chop rib tenderloin sirloin ribeye brisket roast rack bacon sausage ham meat 소고기 돼지고기 스테이크 양고기 송아지 갈비 삼겹살 등심 안심 베이컨 소시지 햄"],
-["Eggs","egg eggs free range egg organic egg quail egg 계란 달걀 메추리알"],
-["Plant-Based Chilled","oat milk almond milk soy milk coconut milk rice milk cashew milk plant milk plant based plant-based vegan cheese vegan yogurt tofu tempeh seitan beyond meat impossible vegan butter oat cream soy cream coconut yogurt 두부 두유 식물성 비건"],
-["Chilled & Dairy","milk cheese yogurt yoghurt butter cream cheese sour cream whipping cream heavy cream half and half quark kefir skyr cottage cheese ricotta mozzarella parmesan cheddar gouda brie camembert feta goat cheese manchego pecorino gruyere emmental cream crème fraîche creme fraiche mascarpone burrata dairy 우유 치즈 요거트 버터 크림치즈 사워크림 크림"],
-["Produce","apple banana grape orange lemon lime avocado tomato cucumber lettuce romaine broccoli cabbage beet paprika onion garlic potato carrot spinach pepper celery mushroom fruit berry strawberry blueberry raspberry blackberry kale corn zucchini courgette mango pear peach pineapple melon watermelon ginger scallion spring onion leek shallot fennel artichoke asparagus eggplant aubergine radish turnip sweet potato yam butternut squash pumpkin cherry plum apricot nectarine fig date pomegranate kiwi coconut passion fruit lychee dragon fruit papaya guava persimmon clementine tangerine mandarin grapefruit arugula rocket chard bok choy bean sprout snap pea green bean jalapeño jalapeno habanero chili chilli produce vegetable salad 사과 바나나 포도 오렌지 레몬 아보카도 토마토 오이 양배추 브로콜리 파프리카 양파 마늘 감자 당근 시금치 버섯 과일 딸기 블루베리 옥수수 망고 배 복숭아 파인애플 수박 생강 고구마 호박 무 대파 부추 깻잎 상추"],
-["Bread & Bakery","bread bagel croissant baguette ciabatta focaccia sourdough pita naan brioche roll tortilla flatbread ensaimada coca pa amb oli rye bread pumpernickel 빵 베이글 크루아상 바게트 또띠아"],
-["Breakfast Foods","cereal oatmeal oat porridge muesli granola pancake mix waffle mix pancake waffle syrup maple syrup 시리얼 오트밀 그래놀라 팬케이크"],
-["Rice, Pasta, Grains & Legumes","rice pasta spaghetti penne fusilli rigatoni linguine fettuccine lasagna noodle ramen udon soba vermicelli couscous quinoa bulgur barley farro polenta cornmeal lentil chickpea bean black bean kidney bean cannellini split pea edamame chia flax semolina 쌀 파스타 면 라면 우동 소바 렌틸 콩 퀴노아"],
-["Oils, Vinegars & Condiments","oil olive oil coconut oil sesame oil sunflower oil vegetable oil vinegar balsamic apple cider vinegar wine vinegar ketchup mustard mayo mayonnaise sauce soy sauce fish sauce oyster sauce hot sauce tabasco sriracha worcestershire honey jam marmalade peanut butter nutella tahini salsa chutney relish dressing aioli 기름 올리브유 참기름 식초 발사믹 케찹 머스타드 마요네즈 소스 간장 꿀 잼 고추장 된장 쌈장"],
-["Pantry Staples","flour sugar brown sugar powdered sugar icing sugar salt baking soda baking powder yeast cornstarch corn starch gelatin cocoa vanilla extract food coloring spice cumin turmeric cinnamon nutmeg pepper corn curry powder paprika powder chili powder garlic powder onion powder stock broth bouillon 밀가루 설탕 소금 베이킹파우더 이스트 바닐라 카레"],
-["Canned & Preserved Goods","canned tinned can of tin of tomato sauce passata canned tuna canned bean canned corn canned tomato pickle gherkin caper olive sun dried sundried preserved jarred conserve compote hummus antipasti tapenade roasted pepper 통조림 캔 올리브 피클 절임"],
-["Frozen Foods","frozen ice cream gelato sorbet popsicle frozen pizza frozen vegetable frozen fruit fish stick fish finger frozen dinner frozen fries frozen shrimp 냉동 아이스크림 냉동식품"],
-["Snacks","chips crisps cracker nuts almond walnut cashew pistachio peanut pecan macadamia popcorn pretzel trail mix rice cake energy bar protein bar jerky dried fruit raisin 과자 견과류 팝콘 아몬드 호두 캐슈넛"],
-["Sweets & Desserts","chocolate candy sweet gummy haribo marshmallow cookie biscuit wafer brownie muffin cupcake cake pastry danish pie tart scone donut doughnut pudding custard jello flan mousse tiramisu 초콜릿 사탕 쿠키 케이크 머핀 도넛 푸딩 비스킷"],
-["Water, Juices & Soft Drinks","water mineral water sparkling water juice orange juice apple juice lemonade soda cola coke pepsi sprite fanta 7up schweppes tonic ginger ale energy drink redbull red bull gatorade smoothie kombucha drink 물 생수 탄산수 주스 콜라 사이다 음료"],
-["Coffee, Tea & Specialty","coffee espresso coffee bean ground coffee instant coffee tea green tea black tea herbal tea chamomile matcha milk tea chai 커피 에스프레소 차 녹차 홍차 말차"],
-["Wine, Beer & Spirits","wine red wine white wine rosé rose wine prosecco champagne cava beer lager ale ipa stout cider cerveza whisky whiskey rum vodka gin brandy tequila mezcal liqueur aperol campari vermouth sangria port sherry soju sake 와인 맥주 소주 사케 위스키 보드카"],
-["Ready-Made & Convenience","ready meal microwave meal instant noodle pre-made pre-cooked rotisserie deli salad coleslaw potato salad pizza sandwich sushi prepared 즉석 도시락 피자 샌드위치 스시"],
-["Special Diet & Health","gluten free gluten-free sugar free sugar-free keto paleo organic protein powder whey collagen probiotic prebiotic vitamin supplement superfood acai spirulina maca diet low carb low-carb lactose free lactose-free 비타민 보충제 유기농 글루텐프리 프로틴"],
-["Personal Care","shampoo conditioner toothpaste tooth paste toothbrush tooth brush deodorant lotion sunscreen sun screen sunblock razor shaving glasses optician lens contact lens perfume parfume parfum cologne creme face cream body cream moisturizer moisturiser hand cream hand soap hand wash lip balm chapstick nail polish makeup make up mascara lipstick foundation concealer cotton pad cotton bud q-tip floss dental mouthwash mouth wash hair gel hair spray hair dye body wash shower gel face wash cleanser toner serum eye cream aftershave after shave medicine aspirin ibuprofen paracetamol bandaid band aid plaster first aid 샴푸 린스 치약 칫솔 로션 선크림 면도기 안경 향수 화장품 립스틱 마스카라"],
-["Household","towel dish soap soap detergent laundry sponge trash bag bin bag foil aluminium aluminum cling wrap plastic wrap parchment baking paper paper towel kitchen roll tissue toilet paper napkin cleaner bleach disinfectant candle battery bulb light bulb garbage bag zip lock ziplock freezer bag storage bag air freshener fabric softener stain remover mop broom gloves rubber gloves steel wool scrub softener softner washing toilet dishwasher tab washing pill dish tab dishwasher 수건 비누 세제 스펀지 휴지 냅킨 세정제 양초 건전지 쓰레기봉투 호일 랩"],
-["Baby & Kids","diaper nappy baby food formula baby wipe pacifier 기저귀 분유 이유식"],
-["Pet","dog food cat food pet food kibble pet treat litter cat litter 개밥 고양이밥 사료"]
+var CAT={
+en:{"Produce":"Produce","Fresh Herbs & Aromatics":"Fresh Herbs & Aromatics","Meat":"Meat","Poultry":"Poultry","Fish & Seafood":"Fish & Seafood","Charcuterie & Cured Meats":"Charcuterie & Cured Meats","Eggs":"Eggs","Chilled & Dairy":"Chilled & Dairy","Plant-Based Chilled":"Plant-Based Chilled","Bread & Bakery":"Bread & Bakery","Breakfast Foods":"Breakfast Foods","Pantry Staples":"Pantry Staples","Rice, Pasta, Grains & Legumes":"Rice, Pasta, Grains & Legumes","Oils, Vinegars & Condiments":"Oils, Vinegars & Condiments","Canned & Preserved Goods":"Canned & Preserved Goods","Frozen Foods":"Frozen Foods","Snacks":"Snacks","Sweets & Desserts":"Sweets & Desserts","Water, Juices & Soft Drinks":"Water, Juices & Soft Drinks","Coffee, Tea & Specialty":"Coffee, Tea & Specialty","Wine, Beer & Spirits":"Wine, Beer & Spirits","Ready-Made & Convenience":"Ready-Made & Convenience","Special Diet & Health":"Special Diet & Health","Household":"Household","Personal Care":"Personal Care","Baby & Kids":"Baby & Kids","Pet":"Pet","Other":"Other"},
+ko:{"Produce":"\uB18D\uC0B0\uBB3C","Fresh Herbs & Aromatics":"\uD5C8\uBE0C & \uD5A5\uC2E0\uB8CC","Meat":"\uC721\uB958","Poultry":"\uAC00\uAE08\uB958","Fish & Seafood":"\uC0DD\uC120 & \uD574\uC0B0\uBB3C","Charcuterie & Cured Meats":"\uC0E4\uD034\uD14C\uB9AC & \uAC00\uACF5\uC721","Eggs":"\uACC4\uB780","Chilled & Dairy":"\uC720\uC81C\uD488","Plant-Based Chilled":"\uC2DD\uBB3C\uC131 \uB300\uCCB4\uC2DD\uD488","Bread & Bakery":"\uBE75 & \uBCA0\uC774\uCEE4\uB9AC","Breakfast Foods":"\uC544\uCE68\uC2DD\uC0AC","Pantry Staples":"\uC2DD\uB8CC\uD488 \uAE30\uBCF8","Rice, Pasta, Grains & Legumes":"\uC300, \uBA74, \uACE1\uBB3C & \uCF69\uB958","Oils, Vinegars & Condiments":"\uAE30\uB984, \uC2DD\uCD08 & \uC591\uB150","Canned & Preserved Goods":"\uD1B5\uC870\uB9BC & \uC800\uC7A5\uC2DD\uD488","Frozen Foods":"\uB0C9\uB3D9\uC2DD\uD488","Snacks":"\uAC04\uC2DD","Sweets & Desserts":"\uACFC\uC790 & \uB514\uC800\uD2B8","Water, Juices & Soft Drinks":"\uBB3C, \uC8FC\uC2A4 & \uC74C\uB8CC","Coffee, Tea & Specialty":"\uCEE4\uD53C, \uCC28 & \uC74C\uB8CC","Wine, Beer & Spirits":"\uC640\uC778, \uB9E5\uC8FC & \uC8FC\uB958","Ready-Made & Convenience":"\uC989\uC11D\uC2DD\uD488","Special Diet & Health":"\uAC74\uAC15 & \uD2B9\uC218\uC2DD\uD488","Household":"\uC0DD\uD65C\uC6A9\uD488","Personal Care":"\uAC1C\uC778\uAD00\uB9AC","Baby & Kids":"\uC720\uC544\uC6A9\uD488","Pet":"\uBC18\uB824\uB3D9\uBB3C","Other":"\uAE30\uD0C0"}
+};
+
+var KR=[
+["Fresh Herbs & Aromatics",["basil","cilantro","coriander","parsley","mint","dill","rosemary","thyme","oregano","chive","tarragon","sage","bay leaf","lemongrass","curry leaf","herb","fresh herb"]],
+["Poultry",["chicken","turkey","duck","goose","quail","poultry","wing","thigh","drumstick","breast"]],
+["Fish & Seafood",["salmon","tuna","cod","halibut","trout","sea bass","tilapia","mackerel","sardine","anchovy","swordfish","shrimp","prawn","crab","lobster","mussel","clam","oyster","scallop","squid","calamari","octopus","fish","seafood"]],
+["Charcuterie & Cured Meats",["prosciutto","salami","chorizo","pepperoni","mortadella","bresaola","pancetta","coppa","nduja","sobrasada","jamon","serrano","iberico","fuet","bratwurst","wurst","cold cut","cured","smoked meat","pastrami","corned beef","pate","terrine","deli meat","sliced meat"]],
+["Meat",["beef","pork","steak","lamb","veal","venison","rabbit","bison","goat","ground meat","mince","minced","fillet","filet","cutlet","chop","rib","tenderloin","sirloin","ribeye","brisket","roast","rack","bacon","sausage","ham","meat"]],
+["Eggs",["egg","eggs","quail egg"]],
+["Plant-Based Chilled",["oat milk","almond milk","soy milk","coconut milk","rice milk","cashew milk","plant milk","plant based","plant-based","vegan cheese","vegan yogurt","tofu","tempeh","seitan","beyond meat","impossible","vegan butter"]],
+["Chilled & Dairy",["milk","cheese","yogurt","yoghurt","butter","cream cheese","sour cream","whipping cream","heavy cream","quark","kefir","skyr","cottage cheese","ricotta","mozzarella","parmesan","cheddar","gouda","brie","camembert","feta","goat cheese","manchego","cream","mascarpone","burrata","dairy"]],
+["Produce",["apple","banana","grape","orange","lemon","lime","avocado","tomato","cucumber","lettuce","romaine","broccoli","cabbage","beet","paprika","onion","garlic","potato","carrot","spinach","pepper","celery","mushroom","fruit","berry","strawberry","blueberry","raspberry","kale","corn","zucchini","mango","pear","peach","pineapple","melon","watermelon","ginger","scallion","spring onion","leek","shallot","fennel","artichoke","asparagus","eggplant","aubergine","radish","turnip","sweet potato","squash","pumpkin","cherry","plum","apricot","nectarine","fig","pomegranate","kiwi","coconut","papaya","clementine","tangerine","mandarin","grapefruit","arugula","rocket","chard","bok choy","bean sprout","snap pea","green bean","chili","chilli","produce","vegetable","salad"]],
+["Bread & Bakery",["bread","bagel","croissant","baguette","ciabatta","focaccia","sourdough","pita","naan","brioche","roll","tortilla","flatbread","ensaimada","rye bread","pumpernickel"]],
+["Breakfast Foods",["cereal","oatmeal","oat","porridge","muesli","granola","pancake","waffle","syrup","maple syrup"]],
+["Rice, Pasta, Grains & Legumes",["rice","pasta","spaghetti","penne","fusilli","linguine","lasagna","noodle","ramen","udon","soba","couscous","quinoa","bulgur","barley","farro","polenta","lentil","chickpea","bean","black bean","kidney bean","edamame","chia","flax"]],
+["Oils, Vinegars & Condiments",["oil","olive oil","coconut oil","sesame oil","vinegar","balsamic","ketchup","mustard","mayo","mayonnaise","sauce","soy sauce","fish sauce","hot sauce","tabasco","sriracha","honey","jam","marmalade","peanut butter","nutella","tahini","salsa","chutney","dressing","aioli"]],
+["Pantry Staples",["flour","sugar","brown sugar","salt","baking soda","baking powder","yeast","cornstarch","gelatin","cocoa","vanilla","extract","spice","cumin","turmeric","cinnamon","nutmeg","curry powder","stock","broth","bouillon"]],
+["Canned & Preserved Goods",["canned","tinned","tomato sauce","passata","pickle","gherkin","caper","olive","sun dried","sundried","preserved","jarred","hummus","antipasti","tapenade"]],
+["Frozen Foods",["frozen","ice cream","gelato","sorbet","popsicle","frozen pizza","fish stick","fish finger"]],
+["Snacks",["chips","crisps","cracker","nuts","almond","walnut","cashew","pistachio","peanut","pecan","popcorn","pretzel","trail mix","rice cake","energy bar","protein bar","jerky","dried fruit","raisin"]],
+["Sweets & Desserts",["chocolate","candy","sweet","gummy","haribo","marshmallow","cookie","biscuit","wafer","brownie","muffin","cupcake","cake","pastry","pie","tart","scone","donut","doughnut","pudding","custard","flan","mousse","tiramisu"]],
+["Water, Juices & Soft Drinks",["water","mineral water","sparkling water","juice","orange juice","apple juice","lemonade","soda","cola","coke","pepsi","sprite","fanta","tonic","ginger ale","energy drink","smoothie","kombucha","drink"]],
+["Coffee, Tea & Specialty",["coffee","espresso","coffee bean","ground coffee","instant coffee","tea","green tea","black tea","herbal tea","chamomile","matcha","milk tea","chai"]],
+["Wine, Beer & Spirits",["wine","red wine","white wine","prosecco","champagne","cava","beer","lager","ale","ipa","stout","cider","cerveza","whisky","whiskey","rum","vodka","gin","brandy","tequila","liqueur","aperol","campari","vermouth","sangria","soju","sake"]],
+["Ready-Made & Convenience",["ready meal","microwave meal","instant noodle","pre-made","pre-cooked","rotisserie","coleslaw","potato salad","pizza","sandwich","sushi","prepared"]],
+["Special Diet & Health",["gluten free","gluten-free","sugar free","sugar-free","keto","paleo","organic","protein powder","whey","collagen","probiotic","vitamin","supplement","superfood"]],
+["Personal Care",["shampoo","conditioner","toothpaste","tooth paste","toothbrush","tooth brush","deodorant","lotion","sunscreen","razor","shaving","glasses","optician","lens","perfume","parfume","parfum","cologne","creme","face cream","body cream","moisturizer","hand cream","hand soap","hand wash","lip balm","nail polish","makeup","mascara","lipstick","floss","dental","mouthwash","mouth wash","hair gel","hair dye","body wash","shower gel","face wash","cleanser","serum","aftershave","medicine","aspirin","ibuprofen","paracetamol","bandaid","plaster","first aid"]],
+["Household",["towel","dish soap","soap","detergent","laundry","sponge","trash bag","bin bag","foil","cling wrap","plastic wrap","parchment","baking paper","paper towel","tissue","toilet paper","napkin","cleaner","bleach","disinfectant","candle","battery","bulb","garbage bag","ziplock","freezer bag","air freshener","fabric softener","stain remover","mop","broom","gloves","steel wool","scrub","softener","softner","washing","toilet","dishwasher","washing pill"]],
+["Baby & Kids",["diaper","nappy","baby food","formula","baby wipe","pacifier"]],
+["Pet",["dog food","cat food","pet food","kibble","pet treat","litter","cat litter"]]
 ];
 
-// Parse rules into structured array with pre-split keywords
-const CAT_RULES=RULES.map(([cat,kws])=>({cat,kws:kws.split(/\s{2,}|\t/).join(' ').split(' ').reduce((acc,w,i,arr)=>{
-  // Rebuild multi-word keywords
-  return acc;
-},[kws])}));
-
-// Better: keep as string array with multi-word support
-const CAT_RULES2=RULES.map(([cat,kwStr])=>{
-  // Split on double-space or known delimiters — actually they're space-separated
-  // Multi-word keywords: we match longest first
-  const kws=kwStr.split(/\s*(?=\b[a-zA-Z\u3131-\uD79D])/).filter(Boolean);
-  return{cat,kwStr};
-});
-
-function categorize(text){
-  const lower=text.toLowerCase();
-  for(const [cat,kwStr] of RULES){
-    // Extract keywords: split by known multi-word phrases first
-    // Simple approach: try to match each keyword phrase
-    const keywords=kwStr.split(/ (?=[a-zA-Z\u3131-\uD79D])/);
-    // Actually let's just split carefully and try word-boundary matching
-    for(const kw of kwStr.split(/ {2,}| /).filter(Boolean)){
-      // Skip single chars
-      if(kw.length<2) continue;
-      try{
-        const escaped=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-        if(new RegExp('\\b'+escaped+'\\b','i').test(lower)) return cat;
-      }catch(e){}
-    }
-  }
-  return "Other";
-}
-
-// Smarter categorize: use the original keyword arrays for exact multi-word matching
-const KEYWORD_RULES=[
-["Fresh Herbs & Aromatics",["basil","cilantro","coriander","parsley","mint","dill","rosemary","thyme","oregano","chive","tarragon","sage","bay leaf","lemongrass","curry leaf","herb","fresh herb","bouquet garni","바질","고수","파슬리","민트","딜","로즈마리","타임","오레가노","허브"]],
-["Poultry",["chicken","turkey","duck","goose","quail","cornish hen","poultry","wing","thigh","drumstick","breast","giblet","닭","칠면조","오리","가금","닭가슴살","닭날개","닭다리"]],
-["Fish & Seafood",["salmon","tuna","cod","halibut","trout","sea bass","tilapia","mackerel","sardine","anchovy","swordfish","mahi","snapper","haddock","sole","monkfish","shrimp","prawn","crab","lobster","mussel","clam","oyster","scallop","squid","calamari","octopus","fish","seafood","연어","참치","대구","고등어","새우","게","조개","오징어","문어","생선","해산물","굴","가리비","랍스터"]],
-["Charcuterie & Cured Meats",["prosciutto","salami","chorizo","pepperoni","mortadella","bresaola","pancetta","coppa","nduja","sobrasada","jamón","jamon","serrano","iberico","fuet","longaniza","bratwurst","wurst","cold cut","cured","smoked meat","smoked ham","smoked turkey","pastrami","corned beef","pâté","pate","terrine","rillette","deli meat","sliced meat","살라미","초리조","하몽","훈제","프로슈토"]],
-["Meat",["beef","pork","steak","lamb","veal","venison","rabbit","bison","goat","ground meat","mince","minced","fillet","filet","cutlet","chop","rib","tenderloin","sirloin","ribeye","brisket","roast","rack","bacon","sausage","ham","meat","소고기","돼지고기","스테이크","양고기","송아지","갈비","삼겹살","등심","안심","베이컨","소시지","햄"]],
-["Eggs",["egg","eggs","free range egg","organic egg","quail egg","계란","달걀","메추리알"]],
-["Plant-Based Chilled",["oat milk","almond milk","soy milk","coconut milk","rice milk","cashew milk","plant milk","plant based","plant-based","vegan cheese","vegan yogurt","tofu","tempeh","seitan","beyond meat","impossible","vegan butter","oat cream","soy cream","coconut yogurt","두부","두유","식물성","비건"]],
-["Chilled & Dairy",["milk","cheese","yogurt","yoghurt","butter","cream cheese","sour cream","whipping cream","heavy cream","half and half","quark","kefir","skyr","cottage cheese","ricotta","mozzarella","parmesan","cheddar","gouda","brie","camembert","feta","goat cheese","manchego","pecorino","gruyere","emmental","cream","mascarpone","burrata","dairy","우유","치즈","요거트","버터","크림치즈","사워크림","크림"]],
-["Produce",["apple","banana","grape","orange","lemon","lime","avocado","tomato","cucumber","lettuce","romaine","broccoli","cabbage","beet","paprika","onion","garlic","potato","carrot","spinach","pepper","celery","mushroom","fruit","berry","strawberry","blueberry","raspberry","blackberry","kale","corn","zucchini","courgette","mango","pear","peach","pineapple","melon","watermelon","ginger","scallion","spring onion","leek","shallot","fennel","artichoke","asparagus","eggplant","aubergine","radish","turnip","sweet potato","yam","butternut","squash","pumpkin","cherry","plum","apricot","nectarine","fig","date","pomegranate","kiwi","coconut","passion fruit","lychee","dragon fruit","papaya","guava","persimmon","clementine","tangerine","mandarin","grapefruit","arugula","rocket","chard","bok choy","bean sprout","snap pea","green bean","jalapeño","jalapeno","habanero","chili","chilli","produce","vegetable","salad","사과","바나나","포도","오렌지","레몬","아보카도","토마토","오이","양배추","브로콜리","파프리카","양파","마늘","감자","당근","시금치","버섯","과일","딸기","블루베리","옥수수","망고","배","복숭아","파인애플","수박","생강","고구마","호박","무","대파","부추","깻잎","상추"]],
-["Bread & Bakery",["bread","bagel","croissant","baguette","ciabatta","focaccia","sourdough","pita","naan","brioche","roll","tortilla","flatbread","ensaimada","rye bread","pumpernickel","빵","베이글","크루아상","바게트","또띠아"]],
-["Breakfast Foods",["cereal","oatmeal","oat","porridge","muesli","granola","pancake mix","waffle mix","pancake","waffle","syrup","maple syrup","시리얼","오트밀","그래놀라","팬케이크"]],
-["Rice, Pasta, Grains & Legumes",["rice","pasta","spaghetti","penne","fusilli","rigatoni","linguine","fettuccine","lasagna","noodle","ramen","udon","soba","vermicelli","couscous","quinoa","bulgur","barley","farro","polenta","cornmeal","lentil","chickpea","bean","black bean","kidney bean","cannellini","split pea","edamame","chia","flax","semolina","쌀","파스타","면","라면","우동","소바","렌틸","콩","퀴노아"]],
-["Oils, Vinegars & Condiments",["oil","olive oil","coconut oil","sesame oil","sunflower oil","vegetable oil","vinegar","balsamic","apple cider vinegar","wine vinegar","ketchup","mustard","mayo","mayonnaise","sauce","soy sauce","fish sauce","oyster sauce","hot sauce","tabasco","sriracha","worcestershire","honey","jam","marmalade","peanut butter","nutella","tahini","salsa","chutney","relish","dressing","aioli","기름","올리브유","참기름","식초","발사믹","케찹","머스타드","마요네즈","소스","간장","꿀","잼","고추장","된장","쌈장"]],
-["Pantry Staples",["flour","sugar","brown sugar","powdered sugar","icing sugar","salt","baking soda","baking powder","yeast","cornstarch","corn starch","gelatin","cocoa","vanilla","extract","food coloring","spice","cumin","turmeric","cinnamon","nutmeg","pepper corn","curry powder","paprika powder","chili powder","garlic powder","onion powder","stock","broth","bouillon","밀가루","설탕","소금","베이킹파우더","이스트","바닐라","카레"]],
-["Canned & Preserved Goods",["canned","tinned","can of","tin of","tomato sauce","passata","pickle","gherkin","caper","olive","sun dried","sundried","preserved","jarred","conserve","compote","hummus","antipasti","tapenade","roasted pepper","통조림","캔","올리브","피클","절임"]],
-["Frozen Foods",["frozen","ice cream","gelato","sorbet","popsicle","frozen pizza","fish stick","fish finger","냉동","아이스크림","냉동식품"]],
-["Snacks",["chips","crisps","cracker","nuts","almond","walnut","cashew","pistachio","peanut","pecan","macadamia","popcorn","pretzel","trail mix","rice cake","energy bar","protein bar","jerky","dried fruit","raisin","과자","견과류","팝콘","아몬드","호두","캐슈넛"]],
-["Sweets & Desserts",["chocolate","candy","sweet","gummy","haribo","marshmallow","cookie","biscuit","wafer","brownie","muffin","cupcake","cake","pastry","danish","pie","tart","scone","donut","doughnut","pudding","custard","jello","flan","mousse","tiramisu","초콜릿","사탕","쿠키","케이크","머핀","도넛","푸딩","비스킷"]],
-["Water, Juices & Soft Drinks",["water","mineral water","sparkling water","juice","orange juice","apple juice","lemonade","soda","cola","coke","pepsi","sprite","fanta","7up","schweppes","tonic","ginger ale","energy drink","redbull","red bull","gatorade","smoothie","kombucha","drink","물","생수","탄산수","주스","콜라","사이다","음료"]],
-["Coffee, Tea & Specialty",["coffee","espresso","coffee bean","ground coffee","instant coffee","tea","green tea","black tea","herbal tea","chamomile","matcha","milk tea","chai","커피","에스프레소","차","녹차","홍차","말차"]],
-["Wine, Beer & Spirits",["wine","red wine","white wine","rosé","rose wine","prosecco","champagne","cava","beer","lager","ale","ipa","stout","cider","cerveza","whisky","whiskey","rum","vodka","gin","brandy","tequila","mezcal","liqueur","aperol","campari","vermouth","sangria","port","sherry","soju","sake","와인","맥주","소주","사케","위스키","보드카"]],
-["Ready-Made & Convenience",["ready meal","microwave meal","instant noodle","pre-made","pre-cooked","rotisserie","deli salad","coleslaw","potato salad","pizza","sandwich","sushi","prepared","즉석","도시락","피자","샌드위치","스시"]],
-["Special Diet & Health",["gluten free","gluten-free","sugar free","sugar-free","keto","paleo","organic","protein powder","whey","collagen","probiotic","prebiotic","vitamin","supplement","superfood","acai","spirulina","maca","diet","low carb","low-carb","lactose free","lactose-free","비타민","보충제","유기농","글루텐프리","프로틴"]],
-["Personal Care",["shampoo","conditioner","toothpaste","tooth paste","toothbrush","tooth brush","deodorant","lotion","sunscreen","sun screen","sunblock","razor","shaving","glasses","optician","lens","contact lens","perfume","parfume","parfum","cologne","creme","face cream","body cream","moisturizer","moisturiser","hand cream","hand soap","hand wash","lip balm","chapstick","nail polish","makeup","make up","mascara","lipstick","foundation","concealer","cotton pad","cotton bud","q-tip","floss","dental","mouthwash","mouth wash","hair gel","hair spray","hair dye","body wash","shower gel","face wash","cleanser","toner","serum","eye cream","aftershave","after shave","medicine","aspirin","ibuprofen","paracetamol","bandaid","band aid","plaster","first aid","샴푸","린스","치약","칫솔","로션","선크림","면도기","안경","향수","화장품","립스틱","마스카라"]],
-["Household",["towel","dish soap","soap","detergent","laundry","sponge","trash bag","bin bag","foil","aluminium","aluminum","cling wrap","plastic wrap","parchment","baking paper","paper towel","kitchen roll","tissue","toilet paper","napkin","cleaner","bleach","disinfectant","candle","battery","bulb","light bulb","garbage bag","zip lock","ziplock","freezer bag","storage bag","air freshener","fabric softener","stain remover","mop","broom","gloves","rubber gloves","steel wool","scrub","softener","softner","washing","toilet","dishwasher tab","washing pill","dish tab","dishwasher","수건","비누","세제","스펀지","휴지","냅킨","세정제","양초","건전지","쓰레기봉투","호일","랩"]],
-["Baby & Kids",["diaper","nappy","baby food","formula","baby wipe","pacifier","기저귀","분유","이유식"]],
-["Pet",["dog food","cat food","pet food","kibble","pet treat","litter","cat litter","개밥","고양이밥","사료"]]
-];
-
-function cat(text){
-  const lower=text.toLowerCase();
-  for(const[c,kws]of KEYWORD_RULES){
-    for(const kw of kws){
-      try{
-        const e=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-        if(new RegExp('\\b'+e+'\\b','i').test(lower))return c;
-      }catch(ex){if(lower.includes(kw))return c;}
+function classify(text){
+  var lower=text.toLowerCase();
+  for(var i=0;i<KR.length;i++){
+    var kws=KR[i][1];
+    for(var j=0;j<kws.length;j++){
+      var kw=kws[j];
+      var escaped=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      try{if(new RegExp('\\b'+escaped+'\\b','i').test(lower))return KR[i][0];}
+      catch(e){if(lower.indexOf(kw)>=0)return KR[i][0];}
     }
   }
   return"Other";
 }
 
-// ─── STATE ───
-let uid=0;
-const nid=()=>++uid;
-let lang='en', tab='template', templateItems=[], shopItems=[], inputVal='', pendingPhoto=null;
-let listening=false, voiceMsg=null, voiceTm=null, checkingId=null, recognition=null;
+var uid=0;
+function nid(){return++uid}
 
-function save(){localStorage.setItem('sl_tmpl',JSON.stringify(templateItems));localStorage.setItem('sl_shop',JSON.stringify(shopItems));localStorage.setItem('sl_lang',lang)}
-function load(){
+var lang='en';
+var tab='template';
+var tmpl=[];
+var shop=[];
+var inp='';
+var photo=null;
+var listening=false;
+var vmsg=null;
+var vtm=null;
+var ckid=null;
+var recog=null;
+
+function sv(){
   try{
-    const t=JSON.parse(localStorage.getItem('sl_tmpl'));if(t)templateItems=t;
-    const s=JSON.parse(localStorage.getItem('sl_shop'));if(s)shopItems=s;
-    const l=localStorage.getItem('sl_lang');if(l)lang=l;
-    uid=Math.max(...[...templateItems,...shopItems].map(i=>i.id||0),0);
+    localStorage.setItem('sl2_t',JSON.stringify(tmpl));
+    localStorage.setItem('sl2_s',JSON.stringify(shop));
+    localStorage.setItem('sl2_l',lang);
   }catch(e){}
 }
-load();
 
-function group(items){
-  const g={};
-  items.forEach(i=>{if(!g[i.category])g[i.category]=[];g[i.category].push(i)});
-  return Object.keys(g).sort((a,b)=>a==='Other'?1:b==='Other'?-1:a.localeCompare(b)).map(c=>({c,items:g[c]}));
+function ld(){
+  try{
+    var a=JSON.parse(localStorage.getItem('sl2_t'));if(a)tmpl=a;
+    var b=JSON.parse(localStorage.getItem('sl2_s'));if(b)shop=b;
+    var c=localStorage.getItem('sl2_l');if(c)lang=c;
+    var mx=0;
+    for(var i=0;i<tmpl.length;i++){if(tmpl[i].id>mx)mx=tmpl[i].id;}
+    for(var i=0;i<shop.length;i++){if(shop[i].id>mx)mx=shop[i].id;}
+    uid=mx;
+  }catch(e){}
+}
+ld();
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function grp(items){
+  var g={};
+  for(var i=0;i<items.length;i++){
+    var c=items[i].category;
+    if(!g[c])g[c]=[];
+    g[c].push(items[i]);
+  }
+  var keys=Object.keys(g).sort(function(a,b){return a==='Other'?1:b==='Other'?-1:a.localeCompare(b)});
+  var result=[];
+  for(var i=0;i<keys.length;i++)result.push({c:keys[i],items:g[keys[i]]});
+  return result;
 }
 
-// ─── RENDER ───
-function render(){
-  const t=LANG[lang];
-  const active=shopItems.filter(i=>!i.done);
-  const done=shopItems.filter(i=>i.done);
-  const selCt=templateItems.filter(i=>i.selected).length;
+var chk='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+var xsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+var camsvg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+var micsvg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+var rstsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
 
-  let h=`<div class="header"><div class="header-top"><div><div class="title">${t.title}</div><div class="subtitle">${t.subtitle}</div></div><button class="lang-btn" onclick="toggleLang()">${lang==='en'?'한국어':'English'}</button></div><div class="tabs">`;
-  ['template','shopping','completed'].forEach(k=>{
-    const label=k==='template'?t.template:k==='shopping'?t.shopping:t.completed;
-    const ct=k==='template'?templateItems.length:k==='shopping'?active.length:done.length;
-    const bc=k==='completed'?'badge-m':'badge';
-    h+=`<button class="tab${tab===k?' active':''}" onclick="setTab('${k}')">${label}${ct>0?` <span class="${bc}">${ct}</span>`:''}</button>`;
-  });
-  h+=`</div></div>`;
+function R(){
+  var t=T[lang];
+  var ct=CAT[lang];
+  var act=[];var dn=[];
+  for(var i=0;i<shop.length;i++){if(shop[i].done)dn.push(shop[i]);else act.push(shop[i]);}
+  var selCt=0;for(var i=0;i<tmpl.length;i++){if(tmpl[i].selected)selCt++;}
 
-  // Input
+  var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button></div><div class="ts">';
+  var tabs=[['template',t.tmpl,tmpl.length],['shopping',t.shop,act.length],['completed',t.comp,dn.length]];
+  for(var i=0;i<tabs.length;i++){
+    var k=tabs[i][0],l=tabs[i][1],n=tabs[i][2];
+    var cls=k===tab?' a':'';
+    var bc=k==='completed'?'bm':'bg';
+    h+='<button class="tb'+cls+'" onclick="sTab(\''+k+'\')">'+l+(n>0?' <span class="'+bc+'">'+n+'</span>':'')+'</button>';
+  }
+  h+='</div></div>';
+
   if(tab==='template'||tab==='shopping'){
-    const action=tab==='template'?'addTemplate':'addShop';
-    h+=`<div class="input-area"><div class="input-row">
-      <input type="text" id="mainInput" value="${esc(inputVal)}" placeholder="${t.ph}" oninput="inputVal=this.value" onkeydown="if(event.key==='Enter')${action}()">
-      <button class="icon-btn" onclick="pickPhoto()" title="Photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-      <button class="icon-btn${listening?' mic-active':''}" onclick="toggleVoice()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
-      <button class="add-btn" onclick="${action}()">${t.add}</button>
-    </div>`;
-    if(voiceMsg) h+=`<div class="voice-toast">${listening?'<span class="voice-dot"></span>':''}${voiceMsg}</div>`;
-    if(pendingPhoto) h+=`<div class="photo-preview"><img src="${pendingPhoto}"><button onclick="pendingPhoto=null;render()">✕</button></div>`;
-    h+=`</div>`;
+    var fn=tab==='template'?'addT':'addS';
+    h+='<div class="ia"><div class="ir"><input type="text" id="mi" placeholder="'+t.ph+'" oninput="inp=this.value" onkeydown="if(event.key===\'Enter\')'+fn+'()">';
+    h+='<button class="ib" onclick="pPh()">'+camsvg+'</button>';
+    h+='<button class="ib'+(listening?' ma':'')+'" onclick="tgV()">'+micsvg+'</button>';
+    h+='<button class="ab" onclick="'+fn+'()">'+t.add+'</button></div>';
+    if(vmsg)h+='<div class="vt">'+(listening?'<span class="vd"></span>':'')+vmsg+'</div>';
+    if(photo)h+='<div class="pp"><img src="'+photo+'"><button onclick="photo=null;R()">&#10005;</button></div>';
+    h+='</div>';
   }
 
-  h+=`<div class="list-area">`;
+  h+='<div class="la">';
 
-  // TEMPLATE
   if(tab==='template'){
-    if(templateItems.length>0){
-      h+=`<div class="template-actions"><button class="sm-btn" onclick="selAll()">${t.selAll}</button><button class="sm-btn" onclick="deAll()">${t.deAll}</button><button class="start-btn" onclick="startShopping()">${t.start} (${selCt})</button></div>`;
+    if(tmpl.length>0){
+      h+='<div class="ta"><button class="sb" onclick="selA()">'+t.selA+'</button><button class="sb" onclick="deA()">'+t.deA+'</button><button class="stb" onclick="goShop()">'+t.start+' ('+selCt+')</button></div>';
     }else{
-      h+=`<div class="empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0ABAB5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><div>${t.emptyT}</div><div class="sub">${t.emptyTS}</div></div>`;
+      h+='<div class="em"><div>'+t.emptyT+'</div><div class="ems">'+t.emptyTS+'</div></div>';
     }
-    group(templateItems).forEach(({c,items})=>{
-      h+=`<div class="cat-group"><div class="cat-header"><span class="cat-dot"></span><span class="cat-name">${t.cats[c]||c}</span><span class="cat-count">${items.length}</span></div>`;
-      items.forEach((it,i)=>{
-        h+=`<div class="item" style="animation-delay:${i*30}ms"><button class="select-box${it.selected?' on':''}" onclick="toggleSel(${it.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:${it.selected?'block':'none'}"><polyline points="20 6 9 17 4 12"/></svg></button><span class="item-text${it.selected?'':' off'}">${esc(it.text)}</span>${it.photo?`<img class="thumb" src="${it.photo}">`:''}
-        <div class="qty-ctrl"><button class="qty-btn" onclick="setQty(${it.id},-1)">−</button><span class="qty-num">${it.qty}</span><button class="qty-btn" onclick="setQty(${it.id},1)">+</button></div>
-        <button class="del-btn" onclick="delTemplate(${it.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
-      });
-      h+=`</div>`;
-    });
+    var gs=grp(tmpl);
+    for(var gi=0;gi<gs.length;gi++){
+      var g=gs[gi];
+      h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+(ct[g.c]||g.c)+'</span><span class="cc">'+g.items.length+'</span></div>';
+      for(var ii=0;ii<g.items.length;ii++){
+        var it=g.items[ii];
+        h+='<div class="it" style="animation-delay:'+ii*30+'ms"><button class="sx'+(it.selected?' on':'')+'" onclick="tgSel('+it.id+')">'+(it.selected?chk:'')+'</button><span class="tx'+(it.selected?'':' off')+'">'+esc(it.text)+'</span>';
+        if(it.photo)h+='<img class="th" src="'+it.photo+'" data-id="'+it.id+'" data-type="t">';
+        h+='<div class="qc"><button class="qb" onclick="sQty('+it.id+',-1)">&minus;</button><span class="qn">'+it.qty+'</span><button class="qb" onclick="sQty('+it.id+',1)">+</button></div>';
+        h+='<button class="db" onclick="delT('+it.id+')">'+xsvg+'</button></div>';
+      }
+      h+='</div>';
+    }
   }
 
-  // SHOPPING
   if(tab==='shopping'){
-    if(active.length===0){
-      h+=`<div class="empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0ABAB5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><div>${t.empty}</div></div>`;
+    if(act.length===0)h+='<div class="em"><div>'+t.empty+'</div></div>';
+    var gs=grp(act);
+    for(var gi=0;gi<gs.length;gi++){
+      var g=gs[gi];
+      h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+(ct[g.c]||g.c)+'</span><span class="cc">'+g.items.length+'</span></div>';
+      for(var ii=0;ii<g.items.length;ii++){
+        var it=g.items[ii];
+        var isCk=it.id===ckid;
+        h+='<div class="it ck'+(isCk?' cki':'')+'" style="animation-delay:'+ii*30+'ms" onclick="chkOff('+it.id+')"><div class="ci'+(isCk?' on':'')+'">'+(isCk?chk:'')+'</div><span class="tx'+(isCk?' off':'')+'">'+esc(it.text)+'</span>';
+        if(it.qty>1)h+='<span class="qg">&times;'+it.qty+'</span>';
+        if(it.photo)h+='<img class="th" src="'+it.photo+'" data-id="'+it.id+'" data-type="s">';
+        h+='</div>';
+      }
+      h+='</div>';
     }
-    group(active).forEach(({c,items})=>{
-      h+=`<div class="cat-group"><div class="cat-header"><span class="cat-dot"></span><span class="cat-name">${t.cats[c]||c}</span><span class="cat-count">${items.length}</span></div>`;
-      items.forEach((it,i)=>{
-        const ck=it.id===checkingId;
-        h+=`<div class="item clickable${ck?' checking':''}" style="animation-delay:${i*30}ms" onclick="checkOff(${it.id})"><div class="check-circle${ck?' on':''}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:${ck?'block':'none'}"><polyline points="20 6 9 17 4 12"/></svg></div><span class="item-text${ck?' done':''}">${esc(it.text)}</span>${it.qty>1?`<span class="qty-badge">×${it.qty}</span>`:''}${it.photo?`<img class="thumb" src="${it.photo}">`:''}
-        </div>`;
-      });
-      h+=`</div>`;
-    });
   }
 
-  // COMPLETED
   if(tab==='completed'){
-    if(done.length>0){
-      h+=`<div class="restore-bar"><button class="restore-btn" onclick="restoreAll()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>${t.reset}</button></div>`;
-    }else{
-      h+=`<div class="empty"><div>${t.emptyC}</div></div>`;
+    if(dn.length>0)h+='<div class="rb"><button class="rbtn" onclick="rstAll()">'+rstsvg+t.reset+'</button></div>';
+    else h+='<div class="em"><div>'+t.emptyC+'</div></div>';
+    var gs=grp(dn);
+    for(var gi=0;gi<gs.length;gi++){
+      var g=gs[gi];
+      h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+(ct[g.c]||g.c)+'</span></div>';
+      for(var ii=0;ii<g.items.length;ii++){
+        var it=g.items[ii];
+        h+='<div class="it ck cpl" onclick="rstOne('+it.id+')"><div class="ci on">'+chk+'</div><span class="tx off">'+esc(it.text)+'</span>';
+        if(it.qty>1)h+='<span class="qg" style="opacity:.5">&times;'+it.qty+'</span>';
+        h+='</div>';
+      }
+      h+='</div>';
     }
-    group(done).forEach(({c,items})=>{
-      h+=`<div class="cat-group"><div class="cat-header"><span class="cat-dot"></span><span class="cat-name">${t.cats[c]||c}</span></div>`;
-      items.forEach(it=>{
-        h+=`<div class="item clickable completed-item" onclick="restoreOne(${it.id})"><div class="check-circle on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="item-text done">${esc(it.text)}</span>${it.qty>1?`<span class="qty-badge" style="opacity:.5">×${it.qty}</span>`:''}</div>`;
-      });
-      h+=`</div>`;
-    });
   }
 
-  h+=`</div>`;
+  h+='</div>';
   document.getElementById('app').innerHTML=h;
-  // Restore input focus
-  const inp=document.getElementById('mainInput');
-  if(inp){inp.value=inputVal;}
+  var mi=document.getElementById('mi');
+  if(mi)mi.value=inp;
 }
 
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function tgLang(){lang=lang==='en'?'ko':'en';sv();R()}
+function sTab(t){tab=t;R()}
 
-// ─── ACTIONS ───
-function toggleLang(){lang=lang==='en'?'ko':'en';save();render()}
-function setTab(t){tab=t;render()}
-
-function addTemplate(){
-  const txt=inputVal.trim();if(!txt)return;
-  templateItems.push({id:nid(),text:txt,category:cat(txt),qty:1,selected:true,photo:pendingPhoto});
-  inputVal='';pendingPhoto=null;save();render();
+function addT(){
+  var txt=inp.trim();if(!txt)return;
+  tmpl.push({id:nid(),text:txt,category:classify(txt),qty:1,selected:true,photo:photo});
+  inp='';photo=null;sv();R();
 }
-function addShop(){
-  const txt=inputVal.trim();if(!txt)return;
-  shopItems.push({id:nid(),text:txt,category:cat(txt),qty:1,photo:pendingPhoto,done:false});
-  inputVal='';pendingPhoto=null;save();render();
+function addS(){
+  var txt=inp.trim();if(!txt)return;
+  shop.push({id:nid(),text:txt,category:classify(txt),qty:1,photo:photo,done:false});
+  inp='';photo=null;sv();R();
 }
-function toggleSel(id){const it=templateItems.find(i=>i.id===id);if(it)it.selected=!it.selected;save();render()}
-function setQty(id,d){const it=templateItems.find(i=>i.id===id);if(it)it.qty=Math.max(1,it.qty+d);save();render()}
-function delTemplate(id){templateItems=templateItems.filter(i=>i.id!==id);save();render()}
-function selAll(){templateItems.forEach(i=>i.selected=true);save();render()}
-function deAll(){templateItems.forEach(i=>i.selected=false);save();render()}
+function tgSel(id){for(var i=0;i<tmpl.length;i++){if(tmpl[i].id===id){tmpl[i].selected=!tmpl[i].selected;break;}}sv();R()}
+function sQty(id,d){for(var i=0;i<tmpl.length;i++){if(tmpl[i].id===id){tmpl[i].qty=Math.max(1,tmpl[i].qty+d);break;}}sv();R()}
+function delT(id){tmpl=tmpl.filter(function(x){return x.id!==id});sv();R()}
+function selA(){for(var i=0;i<tmpl.length;i++)tmpl[i].selected=true;sv();R()}
+function deA(){for(var i=0;i<tmpl.length;i++)tmpl[i].selected=false;sv();R()}
 
-function startShopping(){
-  const sel=templateItems.filter(i=>i.selected);
-  shopItems=sel.map(i=>({id:nid(),text:i.text,category:i.category,qty:i.qty,photo:i.photo,done:false}));
-  tab='shopping';save();render();
+function goShop(){
+  shop=[];
+  for(var i=0;i<tmpl.length;i++){
+    if(tmpl[i].selected){
+      shop.push({id:nid(),text:tmpl[i].text,category:tmpl[i].category,qty:tmpl[i].qty,photo:tmpl[i].photo,done:false});
+    }
+  }
+  tab='shopping';sv();R();
 }
 
-function checkOff(id){
-  if(checkingId)return;
-  checkingId=id;render();
-  setTimeout(()=>{
-    const it=shopItems.find(i=>i.id===id);if(it)it.done=true;
-    checkingId=null;save();render();
+function chkOff(id){
+  if(ckid)return;ckid=id;R();
+  setTimeout(function(){
+    for(var i=0;i<shop.length;i++){if(shop[i].id===id){shop[i].done=true;break;}}
+    ckid=null;sv();R();
   },600);
 }
-function restoreOne(id){const it=shopItems.find(i=>i.id===id);if(it)it.done=false;save();render()}
-function restoreAll(){shopItems.forEach(i=>i.done=false);tab='shopping';save();render()}
+function rstOne(id){for(var i=0;i<shop.length;i++){if(shop[i].id===id){shop[i].done=false;break;}}sv();R()}
+function rstAll(){for(var i=0;i<shop.length;i++)shop[i].done=false;tab='shopping';sv();R()}
 
-function pickPhoto(){
-  let inp=document.getElementById('photoInput');
-  if(!inp){inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture='environment';inp.id='photoInput';inp.style.display='none';document.body.appendChild(inp);
-    inp.onchange=function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{pendingPhoto=e.target.result;render()};r.readAsDataURL(f)};
+function pPh(){
+  var el=document.getElementById('phIn');
+  if(!el){
+    el=document.createElement('input');el.type='file';el.accept='image/*';el.capture='environment';el.id='phIn';el.style.display='none';document.body.appendChild(el);
+    el.onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){photo=e.target.result;R()};r.readAsDataURL(f)};
   }
-  inp.click();
+  el.click();
 }
 
-function toggleVoice(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const t=LANG[lang];
-  if(!SR){showVoiceMsg(t.voiceNA);return}
-  if(listening&&recognition){recognition.stop();listening=false;voiceMsg=null;render();return}
-  recognition=new SR();
-  recognition.lang=lang==='ko'?'ko-KR':'en-US';
-  recognition.interimResults=true;recognition.maxAlternatives=1;recognition.continuous=false;
-  recognition.onresult=e=>{
-    const result=e.results[e.results.length-1];
-    const tx=result[0].transcript.trim();
-    if(result.isFinal){
-      inputVal=tx;listening=false;voiceMsg=null;recognition.stop();
-      if(tab==='template')addTemplate();else addShop();
-      render();
+function showPhId(id,type,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  var arr=type==='t'?tmpl:shop;
+  var src=null;
+  for(var i=0;i<arr.length;i++){if(arr[i].id===id&&arr[i].photo){src=arr[i].photo;break;}}
+  if(!src)return;
+  var d=document.createElement('div');
+  d.className='overlay';
+  d.ontouchend=function(e){e.preventDefault();document.body.removeChild(d)};
+  d.onclick=function(){document.body.removeChild(d)};
+  var img=document.createElement('img');
+  img.src=src;
+  d.appendChild(img);
+  document.body.appendChild(d);
+}
+
+// Event delegation for photo taps
+document.addEventListener('click',function(e){
+  var el=e.target;
+  if(el.tagName==='IMG'&&el.className==='th'){
+    var id=parseInt(el.getAttribute('data-id'));
+    var type=el.getAttribute('data-type');
+    if(id&&type)showPhId(id,type,e);
+  }
+},true);
+
+function tgV(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  var t=T[lang];
+  if(!SR){showVM(t.noVoice);return}
+  if(listening&&recog){recog.stop();listening=false;vmsg=null;R();return}
+  recog=new SR();
+  recog.lang=lang==='ko'?'ko-KR':'en-US';
+  recog.interimResults=false;recog.maxAlternatives=1;recog.continuous=false;
+  var voiceDone=false;
+  recog.onresult=function(e){
+    if(voiceDone)return;
+    voiceDone=true;
+    var tx='';
+    try{tx=e.results[0][0].transcript.trim();}catch(ex){return;}
+    if(!tx)return;
+    listening=false;vmsg=null;
+    var c=classify(tx);
+    if(tab==='template'){
+      tmpl.push({id:nid(),text:tx,category:c,qty:1,selected:true,photo:photo});
     }else{
-      // Show live preview while speaking
-      const inp=document.getElementById('mainInput');
-      if(inp)inp.value=tx;
+      shop.push({id:nid(),text:tx,category:c,qty:1,photo:photo,done:false});
     }
+    photo=null;inp='';sv();R();
+    var mi=document.getElementById('mi');if(mi){mi.value='';mi.blur();}
+    try{recog.stop();}catch(ex){}
   };
-  recognition.onerror=e=>{listening=false;showVoiceMsg(e.error==='not-allowed'?t.micDenied:t.voiceErr);render()};
-  recognition.onend=()=>{listening=false;render()};
-  try{recognition.start();listening=true;voiceMsg=t.listening;render()}
-  catch(e){showVoiceMsg(t.voiceErr)}
+  recog.onerror=function(e){listening=false;showVM(e.error==='not-allowed'?t.micNo:t.voiceE);R()};
+  recog.onend=function(){listening=false;};
+  try{recog.start();listening=true;vmsg=t.listen;R()}
+  catch(e){showVM(t.voiceE)}
 }
-function showVoiceMsg(msg){voiceMsg=msg;render();clearTimeout(voiceTm);voiceTm=setTimeout(()=>{voiceMsg=null;render()},3500)}
+function showVM(m){vmsg=m;R();clearTimeout(vtm);vtm=setTimeout(function(){vmsg=null;R()},3500)}
 
-// Initial render
-render();
+R();
+
 </script>
 </body>
 </html>
