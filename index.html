@@ -357,33 +357,57 @@ document.addEventListener('click',function(e){
 function tgV(){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   var t=T[lang];
-  if(!SR){showVM(t.noVoice);return}
-  if(listening&&recog){recog.stop();listening=false;vmsg=null;R();return}
+  if(!SR){showVM(lang==='ko'?'음성 입력 불가 (HTTPS 필요)':'Voice needs HTTPS');return}
+  if(listening&&recog){
+    try{recog.stop();}catch(ex){}
+    listening=false;vmsg=null;R();
+    return;
+  }
   recog=new SR();
   recog.lang=lang==='ko'?'ko-KR':'en-US';
-  recog.interimResults=false;recog.maxAlternatives=1;recog.continuous=false;
-  var voiceDone=false;
+  recog.interimResults=true;
+  recog.maxAlternatives=1;
+  recog.continuous=true;
   recog.onresult=function(e){
-    if(voiceDone)return;
-    voiceDone=true;
-    var tx='';
-    try{tx=e.results[0][0].transcript.trim();}catch(ex){return;}
-    if(!tx)return;
-    listening=false;vmsg=null;
-    var c=classify(tx);
-    if(tab==='template'){
-      tmpl.push({id:nid(),text:tx,category:c,qty:1,selected:true,photo:photo});
-    }else{
-      shop.push({id:nid(),text:tx,category:c,qty:1,photo:photo,done:false});
+    var last=e.results[e.results.length-1];
+    var tx=last[0].transcript.trim();
+    if(last.isFinal&&tx){
+      var c=classify(tx);
+      if(tab==='template'){
+        tmpl.push({id:nid(),text:tx,category:c,qty:1,selected:true,photo:null});
+      }else{
+        shop.push({id:nid(),text:tx,category:c,qty:1,photo:null,done:false});
+      }
+      inp='';sv();R();
+      var mi=document.getElementById('mi');if(mi)mi.value='';
+      vmsg=lang==='ko'?'\u2714 '+tx+' \u2014 \uACC4\uC18D \uB9D0\uD558\uC138\uC694...':'\u2714 '+tx+' \u2014 keep talking...';
+    }else if(tx){
+      var mi=document.getElementById('mi');if(mi)mi.value=tx;
     }
-    photo=null;inp='';sv();R();
-    var mi=document.getElementById('mi');if(mi){mi.value='';mi.blur();}
-    try{recog.stop();}catch(ex){}
   };
-  recog.onerror=function(e){listening=false;showVM(e.error==='not-allowed'?t.micNo:t.voiceE);R()};
-  recog.onend=function(){listening=false;};
-  try{recog.start();listening=true;vmsg=t.listen;R()}
-  catch(e){showVM(t.voiceE)}
+  recog.onerror=function(e){
+    if(e.error==='no-speech'){
+      showVM(lang==='ko'?'\uB2E4\uC2DC \uB9D0\uC500\uD574\uC8FC\uC138\uC694 / Say again':'Say again / \uB2E4\uC2DC \uB9D0\uC500\uD574\uC8FC\uC138\uC694');
+    }else if(e.error==='not-allowed'){
+      showVM(lang==='ko'?'\uB9C8\uC774\uD06C \uAD8C\uD55C \uD544\uC694 / Mic access needed':'Mic access needed / \uB9C8\uC774\uD06C \uAD8C\uD55C \uD544\uC694');
+      listening=false;R();return;
+    }else{
+      showVM(lang==='ko'?'\uB2E4\uC2DC \uB9D0\uC500\uD574\uC8FC\uC138\uC694 / Say again':'Say again / \uB2E4\uC2DC \uB9D0\uC500\uD574\uC8FC\uC138\uC694');
+    }
+  };
+  recog.onend=function(){
+    if(listening){
+      try{recog.start();}catch(ex){listening=false;vmsg=null;R();}
+    }
+  };
+  try{
+    recog.start();
+    listening=true;
+    vmsg=lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4... \uB9D0\uD558\uC138\uC694':'Listening... speak now';
+    R();
+  }catch(e){
+    showVM(lang==='ko'?'\uC74C\uC131 \uC624\uB958 / Voice error':'Voice error / \uC74C\uC131 \uC624\uB958');
+  }
 }
 function showVM(m){vmsg=m;R();clearTimeout(vtm);vtm=setTimeout(function(){vmsg=null;R()},3500)}
 
