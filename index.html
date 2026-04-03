@@ -367,9 +367,20 @@ function toggleVoice(){
   if(listening&&recognition){recognition.stop();listening=false;voiceMsg=null;render();return}
   recognition=new SR();
   recognition.lang=lang==='ko'?'ko-KR':'en-US';
-  recognition.interimResults=false;recognition.maxAlternatives=1;recognition.continuous=false;
-  recognition.onresult=e=>{const tx=e.results[0][0].transcript;inputVal=inputVal?inputVal+', '+tx:tx;listening=false;voiceMsg=null;render();
-    const inp=document.getElementById('mainInput');if(inp){inp.value=inputVal;inp.focus()}};
+  recognition.interimResults=true;recognition.maxAlternatives=1;recognition.continuous=false;
+  recognition.onresult=e=>{
+    const result=e.results[e.results.length-1];
+    const tx=result[0].transcript.trim();
+    if(result.isFinal){
+      inputVal=tx;listening=false;voiceMsg=null;recognition.stop();
+      if(tab==='template')addTemplate();else addShop();
+      render();
+    }else{
+      // Show live preview while speaking
+      const inp=document.getElementById('mainInput');
+      if(inp)inp.value=tx;
+    }
+  };
   recognition.onerror=e=>{listening=false;showVoiceMsg(e.error==='not-allowed'?t.micDenied:t.voiceErr);render()};
   recognition.onend=()=>{listening=false;render()};
   try{recognition.start();listening=true;voiceMsg=t.listening;render()}
