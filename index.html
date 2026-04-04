@@ -69,6 +69,8 @@ input::placeholder{color:#4A7280}
 .cpl{opacity:.55}
 .em{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;color:#4A7280;font-size:13px;text-align:center}
 .ems{color:#3D616E;font-size:11px;margin-top:3px}
+.sndb{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border-radius:11px;border:1.5px solid #0ABAB5;background:transparent;color:#0ABAB5;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#0ABAB5;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;box-shadow:0 4px 20px rgba(10,186,181,.4);white-space:nowrap}
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;cursor:pointer}
 .overlay img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
 .hb{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0}
@@ -198,6 +200,7 @@ var camsvg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="
 var micsvg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
 var rstsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
 var trsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+var sharesvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
 function R(){
   var t=T[lang];
@@ -251,6 +254,14 @@ function R(){
   }
 
   if(tab==='shopping'){
+    if(act.length>0){
+      var hasNum=!!getSendNum();
+      if(hasNum){
+        h+='<div style="padding:8px 0 4px;display:flex;gap:6px"><button class="sndb" style="flex:1" onclick="sendToR()">'+sharesvg+'Send to R ('+act.length+')</button><button class="ib" style="width:38px;height:38px" onclick="setupSend()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>';
+      }else{
+        h+='<div style="padding:8px 0 4px;display:flex;gap:6px"><button class="sndb" style="flex:1" onclick="sendList()">'+sharesvg+(lang==='ko'?'\uBAA9\uB85D \uBCF4\uB0B4\uAE30':'Share List')+' ('+act.length+')</button><button class="stb" style="font-size:11px;padding:8px 12px" onclick="setupSend()">Setup Send to R</button></div>';
+      }
+    }
     if(act.length===0)h+='<div class="em"><div>'+t.empty+'</div></div>';
     var gs=grp(act);
     for(var gi=0;gi<gs.length;gi++){
@@ -474,6 +485,98 @@ function showHelp(){
   document.body.appendChild(d);
 }
 
+function getSendNum(){try{return localStorage.getItem('sl2_sendnum')||'';}catch(e){return '';}}
+
+function setupSend(){
+  var cur=getSendNum();
+  var d=document.createElement('div');
+  d.className='help-ov';
+  d.innerHTML='<div class="help-hd"><div class="help-ti">Send to R</div><button class="help-x" onclick="this.parentNode.parentNode.remove()">\u2715</button></div>'
+  +'<div class="help-body">'
+  +'<div class="help-card">'
+  +'<div class="help-n">Phone number / \uC804\uD654\uBC88\uD638</div>'
+  +'<div class="help-en" style="margin-bottom:12px">Enter the phone number to send lists to. Saved on this device only.</div>'
+  +'<div class="help-ko" style="margin-bottom:12px">\uBAA9\uB85D\uC744 \uBCF4\uB0BC \uC804\uD654\uBC88\uD638\uB97C \uC785\uB825\uD558\uC138\uC694. \uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5\uB429\uB2C8\uB2E4.</div>'
+  +'<input type="tel" id="sendNumInput" value="'+esc(cur)+'" placeholder="+34 612 345 678" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #123A44;background:#172F38;color:#E0F5F4;font-size:16px;font-family:inherit;outline:none;margin-bottom:12px">'
+  +'<button class="stb" style="width:100%" onclick="saveSendNum()">Save / \uC800\uC7A5</button>'
+  +'</div></div>';
+  document.body.appendChild(d);
+  setTimeout(function(){var i=document.getElementById('sendNumInput');if(i)i.focus()},100);
+}
+
+function saveSendNum(){
+  var i=document.getElementById('sendNumInput');
+  if(!i)return;
+  var num=i.value.trim();
+  if(num){
+    try{localStorage.setItem('sl2_sendnum',num);}catch(e){}
+    showToast(lang==='ko'?'\uC800\uC7A5\uB428!':'Saved!');
+  }
+  var ov=i.closest('.help-ov');
+  if(ov)ov.remove();
+  R();
+}
+
+function sendToR(){
+  var num=getSendNum();
+  if(!num){setupSend();return;}
+  var act=[];
+  for(var i=0;i<shop.length;i++){if(!shop[i].done)act.push({t:shop[i].text,c:shop[i].category,q:shop[i].qty})}
+  if(act.length===0)return;
+  var data=btoa(unescape(encodeURIComponent(JSON.stringify(act))));
+  var url=location.origin+location.pathname+'?items='+data;
+  var cleanNum=num.replace(/[^+0-9]/g,'');
+  var body=encodeURIComponent(url);
+  window.location.href='sms:'+cleanNum+'&body='+body;
+}
+
+function sendList(){
+  var act=[];
+  for(var i=0;i<shop.length;i++){if(!shop[i].done)act.push({t:shop[i].text,c:shop[i].category,q:shop[i].qty})}
+  if(act.length===0)return;
+  var data=btoa(unescape(encodeURIComponent(JSON.stringify(act))));
+  var url=location.origin+location.pathname+'?items='+data;
+  if(navigator.share){
+    navigator.share({title:lang==='ko'?'\uC7A5\uBCF4\uAE30 \uBAA9\uB85D':'Shopping List',text:lang==='ko'?act.length+'\uAC1C \uD56D\uBAA9':act.length+' items',url:url});
+  }else{
+    try{navigator.clipboard.writeText(url);}catch(e){}
+    showToast(lang==='ko'?'\uB9C1\uD06C \uBCF5\uC0AC\uB428!':'Link copied!');
+  }
+}
+
+function showToast(msg){
+  var d=document.createElement('div');
+  d.className='toast';
+  d.textContent=msg;
+  document.body.appendChild(d);
+  setTimeout(function(){d.remove()},2500);
+}
+
+function importFromURL(){
+  var params=new URLSearchParams(location.search);
+  var data=params.get('items');
+  if(!data)return;
+  try{
+    var json=JSON.parse(decodeURIComponent(escape(atob(data))));
+    if(!json||!json.length)return;
+    var count=0;
+    for(var i=0;i<json.length;i++){
+      var it=json[i];
+      if(it.t){
+        shop.push({id:nid(),text:it.t,category:it.c||classify(it.t),qty:it.q||1,photo:null,done:false});
+        count++;
+      }
+    }
+    if(count>0){
+      tab='shopping';
+      sv();
+      showToast((lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0\uB428!':count+' items received!'));
+      history.replaceState(null,'',location.pathname);
+    }
+  }catch(e){}
+}
+
+importFromURL();
 R();
 
 </script>
