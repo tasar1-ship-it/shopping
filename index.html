@@ -197,6 +197,7 @@ var xsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="cu
 var camsvg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
 var micsvg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
 var rstsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
+var trsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 
 function R(){
   var t=T[lang];
@@ -276,9 +277,9 @@ function R(){
       h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+(ct[g.c]||g.c)+'</span></div>';
       for(var ii=0;ii<g.items.length;ii++){
         var it=g.items[ii];
-        h+='<div class="it ck cpl" onclick="rstOne('+it.id+')"><div class="ci on">'+chk+'</div><span class="tx off">'+esc(it.text)+'</span>';
+        h+='<div class="it cpl"><div class="ci on">'+chk+'</div><span class="tx off">'+esc(it.text)+'</span>';
         if(it.qty>1)h+='<span class="qg" style="opacity:.5">&times;'+it.qty+'</span>';
-        h+='</div>';
+        h+='<button class="db" onclick="delShop('+it.id+')">'+trsvg+'</button></div>';
       }
       h+='</div>';
     }
@@ -327,6 +328,7 @@ function chkOff(id){
   },600);
 }
 function rstOne(id){for(var i=0;i<shop.length;i++){if(shop[i].id===id){shop[i].done=false;break;}}sv();R()}
+function delShop(id){shop=shop.filter(function(x){return x.id!==id});sv();R()}
 function rstAll(){for(var i=0;i<shop.length;i++)shop[i].done=false;tab='shopping';sv();R()}
 
 function pPh(){
