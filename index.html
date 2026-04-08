@@ -562,9 +562,11 @@ function showToast(msg){
 
 function importFromURL(){
   var params=new URLSearchParams(location.search);
-
-  // New compact format: ?add=milk|2x eggs|bread
   var addData=params.get('add');
+
+  // Debug: show what was received
+  if(location.search){showToast('URL: '+location.search.substring(0,60));}
+
   if(addData){
     try{
       var items=decodeURIComponent(addData).split('|');
