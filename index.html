@@ -520,23 +520,31 @@ function saveSendNum(){
 function sendToR(){
   var num=getSendNum();
   if(!num){setupSend();return;}
-  var act=[];
-  for(var i=0;i<shop.length;i++){if(!shop[i].done)act.push({t:shop[i].text,c:shop[i].category,q:shop[i].qty})}
-  if(act.length===0)return;
-  var data=btoa(unescape(encodeURIComponent(JSON.stringify(act))));
-  var url=location.origin+location.pathname+'?items='+data;
+  var url=buildShareURL();
+  if(!url)return;
   var cleanNum=num.replace(/[^+0-9]/g,'');
-  var body=encodeURIComponent(url);
-  window.location.href='sms:'+cleanNum+'&body='+body;
+  window.location.href='sms:'+cleanNum+'&body='+encodeURIComponent(url);
+}
+
+function buildShareURL(){
+  var act=[];
+  for(var i=0;i<shop.length;i++){
+    if(!shop[i].done){
+      var s=shop[i].text;
+      if(shop[i].qty>1)s=shop[i].qty+'x '+s;
+      act.push(s);
+    }
+  }
+  if(act.length===0)return null;
+  var encoded=encodeURIComponent(act.join('|'));
+  return location.origin+location.pathname+'?add='+encoded;
 }
 
 function sendList(){
-  var act=[];
-  for(var i=0;i<shop.length;i++){if(!shop[i].done)act.push({t:shop[i].text,c:shop[i].category,q:shop[i].qty})}
-  if(act.length===0)return;
-  var data=btoa(unescape(encodeURIComponent(JSON.stringify(act))));
-  var url=location.origin+location.pathname+'?items='+data;
+  var url=buildShareURL();
+  if(!url)return;
   if(navigator.share){
+    var act=shop.filter(function(x){return!x.done});
     navigator.share({title:lang==='ko'?'\uC7A5\uBCF4\uAE30 \uBAA9\uB85D':'Shopping List',text:lang==='ko'?act.length+'\uAC1C \uD56D\uBAA9':act.length+' items',url:url});
   }else{
     try{navigator.clipboard.writeText(url);}catch(e){}
@@ -554,26 +562,54 @@ function showToast(msg){
 
 function importFromURL(){
   var params=new URLSearchParams(location.search);
-  var data=params.get('items');
-  if(!data)return;
-  try{
-    var json=JSON.parse(decodeURIComponent(escape(atob(data))));
-    if(!json||!json.length)return;
-    var count=0;
-    for(var i=0;i<json.length;i++){
-      var it=json[i];
-      if(it.t){
-        shop.push({id:nid(),text:it.t,category:it.c||classify(it.t),qty:it.q||1,photo:null,done:false});
+
+  // New compact format: ?add=milk|2x eggs|bread
+  var addData=params.get('add');
+  if(addData){
+    try{
+      var items=decodeURIComponent(addData).split('|');
+      var count=0;
+      for(var i=0;i<items.length;i++){
+        var raw=items[i].trim();
+        if(!raw)continue;
+        var qty=1;
+        var match=raw.match(/^(\d+)x\s+(.+)/);
+        if(match){qty=parseInt(match[1]);raw=match[2];}
+        shop.push({id:nid(),text:raw,category:classify(raw),qty:qty,photo:null,done:false});
         count++;
       }
-    }
-    if(count>0){
-      tab='shopping';
-      sv();
-      showToast((lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0\uB428!':count+' items received!'));
-      history.replaceState(null,'',location.pathname);
-    }
-  }catch(e){}
+      if(count>0){
+        tab='shopping';
+        sv();
+        showToast(lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0!':count+' items received!');
+        history.replaceState(null,'',location.pathname);
+      }
+    }catch(e){}
+    return;
+  }
+
+  // Legacy base64 format: ?items=...
+  var data=params.get('items');
+  if(data){
+    try{
+      var json=JSON.parse(decodeURIComponent(escape(atob(data))));
+      if(!json||!json.length)return;
+      var count=0;
+      for(var i=0;i<json.length;i++){
+        var it=json[i];
+        if(it.t){
+          shop.push({id:nid(),text:it.t,category:it.c||classify(it.t),qty:it.q||1,photo:null,done:false});
+          count++;
+        }
+      }
+      if(count>0){
+        tab='shopping';
+        sv();
+        showToast(lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0!':count+' items received!');
+        history.replaceState(null,'',location.pathname);
+      }
+    }catch(e){}
+  }
 }
 
 importFromURL();
