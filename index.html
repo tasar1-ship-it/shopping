@@ -203,6 +203,9 @@ var trsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="c
 var sharesvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 
 function R(){
+  // Preserve input text across re-renders
+  var mi=document.getElementById('mi');
+  if(mi)inp=mi.value;
   var t=T[lang];
   var ct=CAT[lang];
   var act=[];var dn=[];
@@ -322,12 +325,20 @@ function selA(){for(var i=0;i<tmpl.length;i++)tmpl[i].selected=true;sv();R()}
 function deA(){for(var i=0;i<tmpl.length;i++)tmpl[i].selected=false;sv();R()}
 
 function goShop(){
-  shop=[];
+  // Keep existing manually-added shopping items (not done)
+  var keep=[];
+  for(var i=0;i<shop.length;i++){
+    if(!shop[i].done)keep.push(shop[i]);
+  }
+  // Add selected template items (avoid duplicates by name)
+  var existing={};
+  for(var i=0;i<keep.length;i++){existing[keep[i].text.toLowerCase()]=true;}
   for(var i=0;i<tmpl.length;i++){
-    if(tmpl[i].selected){
-      shop.push({id:nid(),text:tmpl[i].text,category:tmpl[i].category,qty:tmpl[i].qty,photo:tmpl[i].photo,done:false});
+    if(tmpl[i].selected&&!existing[tmpl[i].text.toLowerCase()]){
+      keep.push({id:nid(),text:tmpl[i].text,category:tmpl[i].category,qty:tmpl[i].qty,photo:tmpl[i].photo,done:false});
     }
   }
+  shop=keep;
   tab='shopping';sv();R();
 }
 
@@ -343,10 +354,18 @@ function delShop(id){shop=shop.filter(function(x){return x.id!==id});sv();R()}
 function rstAll(){for(var i=0;i<shop.length;i++)shop[i].done=false;tab='shopping';sv();R()}
 
 function pPh(){
+  // Save current input text before camera opens
+  var mi=document.getElementById('mi');
+  if(mi)inp=mi.value;
   var el=document.getElementById('phIn');
   if(!el){
     el=document.createElement('input');el.type='file';el.accept='image/*';el.capture='environment';el.id='phIn';el.style.display='none';document.body.appendChild(el);
-    el.onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){photo=e.target.result;R()};r.readAsDataURL(f)};
+    el.onchange=function(){
+      var f=this.files[0];if(!f)return;
+      var r=new FileReader();
+      r.onload=function(e){photo=e.target.result;R()};
+      r.readAsDataURL(f);
+    };
   }
   el.click();
 }
@@ -563,9 +582,6 @@ function showToast(msg){
 function importFromURL(){
   var params=new URLSearchParams(location.search);
   var addData=params.get('add');
-
-  // Debug: show what was received
-  if(location.search){showToast('URL: '+location.search.substring(0,60));}
 
   if(addData){
     try{
