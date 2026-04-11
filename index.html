@@ -163,7 +163,19 @@ function sv(){
     localStorage.setItem('sl2_t',JSON.stringify(tmpl));
     localStorage.setItem('sl2_s',JSON.stringify(shop));
     localStorage.setItem('sl2_l',lang);
-  }catch(e){}
+  }catch(e){
+    // Storage full — try again without photos
+    try{
+      var t2=tmpl.map(function(x){var c={};for(var k in x)c[k]=x[k];c.photo=null;return c});
+      var s2=shop.map(function(x){var c={};for(var k in x)c[k]=x[k];c.photo=null;return c});
+      localStorage.setItem('sl2_t',JSON.stringify(t2));
+      localStorage.setItem('sl2_s',JSON.stringify(s2));
+      localStorage.setItem('sl2_l',lang);
+      showToast(lang==='ko'?'\uC800\uC7A5\uACF5\uAC04 \uBD80\uC871 - \uC0AC\uC9C4 \uC81C\uAC70\uB428':'Storage full - photos removed');
+    }catch(e2){
+      showToast(lang==='ko'?'\uC800\uC7A5 \uC2E4\uD328!':'Save failed!');
+    }
+  }
 }
 
 function ld(){
@@ -175,6 +187,11 @@ function ld(){
     for(var i=0;i<tmpl.length;i++){if(tmpl[i].id>mx)mx=tmpl[i].id;}
     for(var i=0;i<shop.length;i++){if(shop[i].id>mx)mx=shop[i].id;}
     uid=mx;
+    // Strip oversized photos (>100KB) from old data
+    var dirty=false;
+    for(var i=0;i<tmpl.length;i++){if(tmpl[i].photo&&tmpl[i].photo.length>100000){tmpl[i].photo=null;dirty=true;}}
+    for(var i=0;i<shop.length;i++){if(shop[i].photo&&shop[i].photo.length>100000){shop[i].photo=null;dirty=true;}}
+    if(dirty)sv();
   }catch(e){}
 }
 ld();
@@ -353,7 +370,6 @@ function delShop(id){shop=shop.filter(function(x){return x.id!==id});sv();R()}
 function rstAll(){for(var i=0;i<shop.length;i++)shop[i].done=false;tab='shopping';sv();R()}
 
 function pPh(){
-  // Save current input text before camera opens
   var mi=document.getElementById('mi');
   if(mi)inp=mi.value;
   var el=document.getElementById('phIn');
@@ -362,11 +378,37 @@ function pPh(){
     el.onchange=function(){
       var f=this.files[0];if(!f)return;
       var r=new FileReader();
-      r.onload=function(e){photo=e.target.result;R()};
+      r.onload=function(e){
+        compressPhoto(e.target.result,function(compressed){
+          photo=compressed;
+          R();
+        });
+      };
       r.readAsDataURL(f);
     };
   }
   el.click();
+}
+
+function compressPhoto(dataURL,callback){
+  var img=new Image();
+  img.onload=function(){
+    var maxDim=400;
+    var w=img.width;
+    var h=img.height;
+    if(w>maxDim||h>maxDim){
+      if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}
+      else{w=Math.round(w*maxDim/h);h=maxDim;}
+    }
+    var canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    var result=canvas.toDataURL('image/jpeg',0.6);
+    callback(result);
+  };
+  img.onerror=function(){callback(dataURL)};
+  img.src=dataURL;
 }
 
 function showPhId(id,type,ev){
