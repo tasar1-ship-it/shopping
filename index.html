@@ -209,6 +209,18 @@ function sv(){
 
 // ─── LOAD: localStorage first, then Firebase overwrites ───
 function ld(){
+  // Migrate from old version (sl2_ keys) if no sl3_ data exists
+  try{
+    var hasNew=localStorage.getItem('sl3_t');
+    if(!hasNew){
+      var oldT=JSON.parse(localStorage.getItem('sl2_t'));
+      var oldS=JSON.parse(localStorage.getItem('sl2_s'));
+      var oldL=localStorage.getItem('sl2_l');
+      if(oldT){localStorage.setItem('sl3_t',JSON.stringify(oldT));}
+      if(oldS){localStorage.setItem('sl3_s',JSON.stringify(oldS));}
+      if(oldL){localStorage.setItem('sl3_l',oldL);}
+    }
+  }catch(e){}
   // Local first (fast, has photos)
   try{
     var a=JSON.parse(localStorage.getItem('sl3_t'));if(a)tmpl=a;
