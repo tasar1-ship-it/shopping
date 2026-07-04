@@ -67,6 +67,7 @@ input::placeholder{color:#4A7280}
 .rb{padding:6px 0 4px}
 .rbtn{display:flex;align-items:center;justify-content:center;width:100%;padding:9px 0;border-radius:11px;border:1.5px solid #0ABAB5;background:#123A44;color:#0ABAB5;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;gap:5px}
 .cpl{opacity:.55}
+.clr{background:none;border:none;color:#3D616E;font-size:11px;font-weight:500;letter-spacing:.04em;cursor:pointer;font-family:inherit;padding:8px 16px}
 .em{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;color:#4A7280;font-size:13px;text-align:center}
 .ems{color:#3D616E;font-size:11px;margin-top:3px}
 .sndb{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border-radius:11px;border:1.5px solid #0ABAB5;background:transparent;color:#0ABAB5;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
@@ -120,6 +121,10 @@ function getDevId(){
   return id;
 }
 var devId=getDevId();
+
+// Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
+var APP_V='1783181907';
+var justCleared=false;
 
 // ─── LANG ───
 var TT={
@@ -227,6 +232,16 @@ function ld(){
     var b=JSON.parse(localStorage.getItem('sl3_s'));if(b)shop=b;
     var c=localStorage.getItem('sl3_l');if(c)lang=c;
   }catch(e){}
+  // New app version deployed? Clear shopping + completed (template preserved)
+  try{
+    var pv=localStorage.getItem('sl3_ver');
+    if(pv!==APP_V){
+      shop=[];
+      justCleared=true;
+      localStorage.setItem('sl3_ver',APP_V);
+      localStorage.setItem('sl3_s',JSON.stringify([]));
+    }
+  }catch(e){}
   fixUid();
   // Then load from Firebase (authoritative, no photos)
   db.ref('devices/'+devId).once('value',function(snap){
@@ -239,7 +254,7 @@ function ld(){
         tmpl=d.template;
         for(var i=0;i<tmpl.length;i++){if(!tmpl[i].photo&&photoMap[tmpl[i].text])tmpl[i].photo=photoMap[tmpl[i].text];}
       }
-      if(d.shopping){
+      if(d.shopping&&!justCleared){
         var photoMap2={};
         for(var i=0;i<shop.length;i++){if(shop[i].photo)photoMap2[shop[i].text]=shop[i].photo;}
         shop=d.shopping;
@@ -248,10 +263,12 @@ function ld(){
       if(d.lang)lang=d.lang;
       fixUid();
       fbOK=true;
+      if(justCleared){sv();justCleared=false;}
       R();
     }else{
       fbOK=true;
       sv(); // First time: push local data to Firebase
+      justCleared=false;
       R();
     }
   },function(err){
