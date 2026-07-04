@@ -12,7 +12,7 @@ BUILD=$(date +%s)
 sed -i '' "s/__BUILD__/$BUILD/" "$REPO/index.html"
 cd "$REPO"
 git add index.html manifest.json icon.svg deploy.sh 2>/dev/null
-git commit -m "Update shopping list $(date '+%H:%M') build $BUILD"
+git commit -m "Update shopping list build $BUILD"
 if [ $? -eq 0 ]; then
   git push
   echo ""
