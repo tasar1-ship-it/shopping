@@ -51,7 +51,7 @@ input::placeholder{color:#4A7280}
 .cc{font-size:11px;color:#3D616E;font-weight:500}
 .it{display:flex;align-items:center;gap:9px;padding:10px 11px;background:#172F38;border-radius:12px;margin-bottom:4px;animation:fi .3s ease forwards;opacity:0}
 .ck{cursor:pointer}
-.cki{animation:co .6s ease forwards !important}
+.cki{animation:co .35s ease forwards !important}
 .ci{width:20px;height:20px;border-radius:50%;border:2px solid #265158;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
 .ci.on{background:#0ABAB5;border-color:#0ABAB5}
 .sx{width:20px;height:20px;border-radius:5px;border:2px solid #265158;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:transparent}
@@ -508,7 +508,7 @@ function chkOff(id){
     for(var i=0;i<shop.length;i++){if(shop[i].id===id){shop[i].done=true;item=shop[i];break;}}
     ckid=null;sv();R();
     if(item)showUndo(item,'c');
-  },600);
+  },350);
 }
 function delShop(id){
   var removed=null;
