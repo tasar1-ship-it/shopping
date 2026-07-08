@@ -123,7 +123,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1783183418';
+var APP_V='1783539089';
 var justCleared=false;
 
 // ─── LANG ───
@@ -264,15 +264,21 @@ function ld(){
       fixUid();
       fbOK=true;
       if(justCleared){sv();justCleared=false;}
+      loadDone=true;
+      if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
       R();
     }else{
       fbOK=true;
       sv(); // First time: push local data to Firebase
       justCleared=false;
+      loadDone=true;
+      if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
       R();
     }
   },function(err){
     fbOK=false;
+    loadDone=true;
+    if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
     R();
   });
 }
@@ -285,29 +291,51 @@ function fixUid(){
 }
 
 // ─── INBOX: listen for items sent from another device ───
+var loadDone=false;
+var pendingInbox=null;
+var lastInboxTime=0;
+
+function applyInbox(d){
+  if(!d)return;
+  var items=d.items;
+  if(!items||!items.length)return;
+  // Dedupe guard: same payload delivered twice (listener + foreground check)
+  if(d.time&&d.time===lastInboxTime)return;
+  if(d.time)lastInboxTime=d.time;
+  var count=0;
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    if(it.text){
+      shop.push({id:nid(),text:it.text,category:it.category||classify(it.text),qty:it.qty||1,photo:null,done:false});
+      count++;
+    }
+  }
+  // Clear inbox
+  db.ref('inbox/'+devId).remove();
+  if(count>0){
+    tab='shopping';
+    sv();R();
+    showToast((lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0!':count+' items received!'));
+  }
+}
+
 function listenInbox(){
   db.ref('inbox/'+devId).on('value',function(snap){
     var d=snap.val();
     if(!d)return;
-    var items=d.items;
-    if(!items||!items.length)return;
-    var count=0;
-    for(var i=0;i<items.length;i++){
-      var it=items[i];
-      if(it.text){
-        shop.push({id:nid(),text:it.text,category:it.category||classify(it.text),qty:it.qty||1,photo:null,done:false});
-        count++;
-      }
-    }
-    // Clear inbox
-    db.ref('inbox/'+devId).remove();
-    if(count>0){
-      tab='shopping';
-      sv();R();
-      showToast((lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0!':count+' items received!'));
-    }
+    // Initial device load still in flight? Buffer, or its callback would
+    // overwrite the merged list with the older cloud copy (items lost).
+    if(!loadDone){pendingInbox=d;return;}
+    applyInbox(d);
   });
 }
+
+// iPhone Safari suspends the connection in background; re-check on return
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&loadDone){
+    try{db.ref('inbox/'+devId).once('value',function(s){applyInbox(s.val());});}catch(e){}
+  }
+});
 
 // ─── SEND TO R ───
 function getSendTarget(){try{return localStorage.getItem('sl3_target')||'';}catch(e){return '';}}
