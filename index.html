@@ -121,7 +121,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1783616646';
+var APP_V='1783617397';
 var justCleared=false;
 
 // ─── LANG ───
@@ -390,7 +390,7 @@ function R(){
   for(var i=0;i<shop.length;i++){if(shop[i].done)dn.push(shop[i]);else act.push(shop[i]);}
   var hasTarget=!!getSendTarget();
 
-  var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><div style="display:flex;gap:6px"><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button><button class="hb" onclick="showHelp()">?</button></div></div>';
+  var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><div style="display:flex;gap:6px"><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button></div></div>';
   // ID bar
   h+='<div class="id-bar"><span class="sync-dot '+(fbOK?'sync-on':'sync-off')+'"></span>'+t.myId+': <span class="id-code">'+devId+'</span>';
   if(hasTarget)h+='<span style="margin-left:auto">'+t.paired+': <span class="id-code">'+getSendTarget()+'</span></span>';
@@ -443,6 +443,7 @@ function R(){
       }
       h+='</div>';
     }
+    if(act.length>0)h+='<div style="text-align:center;padding:14px 0 4px"><button class="clr" onclick="clearShop()">'+(lang==='ko'?'\uBAA9\uB85D \uBE44\uC6B0\uAE30':'Clear list')+'</button></div>';
   }
 
   if(tab==='completed'){
@@ -460,6 +461,7 @@ function R(){
       }
       h+='</div>';
     }
+    if(dn.length>0)h+='<div style="text-align:center;padding:14px 0 4px"><button class="clr" onclick="clearDone()">'+(lang==='ko'?'\uC644\uB8CC \uD56D\uBAA9 \uBE44\uC6B0\uAE30':'Clear completed')+'</button></div>';
   }
 
   h+='</div>';
@@ -486,6 +488,39 @@ function chkOff(id){
     ckid=null;sv();R();
     if(item)showUndo(item,'c');
   },350);
+}
+function clearShop(){
+  var removed=[];var keep=[];
+  for(var i=0;i<shop.length;i++){if(shop[i].done)keep.push(shop[i]);else removed.push(shop[i]);}
+  if(removed.length===0)return;
+  shop=keep;sv();R();
+  showUndoBulk(removed);
+}
+function clearDone(){
+  var removed=[];var keep=[];
+  for(var i=0;i<shop.length;i++){if(shop[i].done)removed.push(shop[i]);else keep.push(shop[i]);}
+  if(removed.length===0)return;
+  shop=keep;sv();R();
+  showUndoBulk(removed);
+}
+function showUndoBulk(items){
+  var old=document.getElementById('undoToast');if(old)old.remove();
+  clearTimeout(undoTm);
+  var d=document.createElement('div');
+  d.className='toast';d.id='undoToast';
+  d.style.display='flex';d.style.alignItems='center';d.style.gap='12px';
+  var label=document.createElement('span');
+  label.textContent=lang==='ko'?items.length+'\uAC1C \uD56D\uBAA9 \uC0AD\uC81C\uB428':'Cleared '+items.length+' items';
+  var btn=document.createElement('button');
+  btn.textContent=lang==='ko'?'\uC2E4\uD589 \uCDE8\uC18C':'Undo';
+  btn.style.cssText='background:#fff;color:#0062CC;border:none;padding:5px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
+  btn.onclick=function(){
+    shop=shop.concat(items);
+    sv();R();d.remove();clearTimeout(undoTm);
+  };
+  d.appendChild(label);d.appendChild(btn);
+  document.body.appendChild(d);
+  undoTm=setTimeout(function(){d.remove()},3000);
 }
 function delShop(id){
   var removed=null;
@@ -644,21 +679,6 @@ function showUndo(item,type){
   d.appendChild(label);d.appendChild(btn);
   document.body.appendChild(d);
   undoTm=setTimeout(function(){d.remove()},3000);
-}
-
-// ─── HELP ───
-function showHelp(){
-  var d=document.createElement('div');d.className='help-ov';
-  d.innerHTML='<div class="help-hd"><div class="help-ti">Manual / \uC0AC\uC6A9 \uC124\uBA85\uC11C</div><button class="help-x" onclick="this.parentNode.parentNode.remove()">\u2715</button></div>'
-  +'<div class="help-body">'
-  +'<div class="help-card"><div class="help-n">\u2460 Shopping / \uC7A5\uBCF4\uAE30</div><div class="help-en">Tap items to check off. Add extra items via input, camera, or voice.</div><div class="help-ko">\uD56D\uBAA9 \uD0ED\uD558\uBA74 \uCCB4\uD06C. \uC785\uB825/\uCE74\uBA54\uB77C/\uC74C\uC131\uC73C\uB85C \uCD94\uAC00 \uAC00\uB2A5.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2461 Completed / \uC644\uB8CC</div><div class="help-en">Checked items appear here. Trash icon to delete. Restore All to bring back.</div><div class="help-ko">\uC644\uB8CC \uD56D\uBAA9 \uD45C\uC2DC. \uD734\uC9C0\uD1B5 \uC0AD\uC81C. \uC804\uCCB4 \uBCF5\uC6D0 \uAC00\uB2A5.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2462 Voice / \uC74C\uC131</div><div class="help-en">Tap mic \u2192 speak \u2192 pause \u2192 auto-added. Keep talking. Tap mic to stop.</div><div class="help-ko">\uB9C8\uC774\uD06C \uD0ED \u2192 \uB9D0\uD558\uAE30 \u2192 \uBA48\uCDA4 \u2192 \uC790\uB3D9\uCD94\uAC00. \uACC4\uC18D \uB9D0\uD558\uC138\uC694.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2463 Camera / \uCE74\uBA54\uB77C</div><div class="help-en">Tap camera \u2192 photo attaches to next item. Tap thumbnail for full view.</div><div class="help-ko">\uCE74\uBA54\uB77C \uD0ED \u2192 \uB2E4\uC74C \uD56D\uBAA9\uC5D0 \uCCA8\uBD80. \uBBF8\uB9AC\uBCF4\uAE30 \uD0ED\uD558\uBA74 \uD655\uB300.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2464 Send to R / \uBCF4\uB0B4\uAE30</div><div class="help-en">Setup: exchange 6-letter IDs between phones. Then one tap sends your shopping list to the other phone instantly via cloud.</div><div class="help-ko">\uC124\uC815: \uD734\uB300\uD3F0 \uAC04 6\uC790 ID \uAD50\uD658. \uADF8 \uD6C4 \uD55C \uBC88 \uD0ED\uC73C\uB85C \uD074\uB77C\uC6B0\uB4DC\uB85C \uC989\uC2DC \uC804\uC1A1.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2465 Cloud Sync / \uD074\uB77C\uC6B0\uB4DC</div><div class="help-en">Data saved to Firebase cloud. Never lost. Green dot = connected. Red = offline (syncs when back online).</div><div class="help-ko">\uB370\uC774\uD130\uB294 Firebase \uD074\uB77C\uC6B0\uB4DC\uC5D0 \uC800\uC7A5. \uC808\uB300 \uC190\uC2E4 \uC5C6\uC74C. \uCD08\uB85D \uC810 = \uC5F0\uACB0. \uBE68\uAC04 \uC810 = \uC624\uD504\uB77C\uC778.</div></div>'
-  +'</div>';
-  document.body.appendChild(d);
 }
 
 // ─── INIT ───
