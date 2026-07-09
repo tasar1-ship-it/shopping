@@ -121,7 +121,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1783615958';
+var APP_V='1783616646';
 var justCleared=false;
 
 // ─── LANG ───
@@ -581,8 +581,7 @@ function tgV(){
     vmsg='\u2714 '+tx;
     // Reset guard after 2s so the same item CAN be added again intentionally later
     setTimeout(function(){if(lastCommitted===tx)lastCommitted='';},2000);
-    // iOS delivers ONE cumulative transcript in continuous mode; stop after each
-    // item so the auto-restart (onend) begins a fresh session per item.
+    // Fresh recognition session per item (iOS transcript is cumulative)
     try{recog.stop();}catch(ex){}
   }
   recog.onresult=function(e){
@@ -590,20 +589,19 @@ function tgV(){
     var tx=last[0].transcript.trim();
     if(last.isFinal&&tx){
       // Dying-session final right after a timer commit is the same phrase,
-      // possibly extended ("test" -> "test one") — drop it. Content+time
-      // based, so it works regardless of final/onend event order.
+      // possibly extended ("test" -> "test one") — drop it.
       if(lastCommitted&&(Date.now()-lastCommitAt)<700&&tx.toLowerCase().indexOf(lastCommitted.toLowerCase())===0){return;}
       clearTimeout(fastTm);
       commitVoice(tx);
     }else if(tx){
-      // Live preview + fast-commit: commit when text stays stable 800ms
-      // (must exceed natural inter-word gaps, else phrases split in half)
+      // Live preview + fast-commit: commit when text stays stable 350ms.
+      // Speak each item fluidly; pause only BETWEEN items.
       var mi=document.getElementById('mi');if(mi)mi.value=tx;
       clearTimeout(fastTm);
       fastTm=setTimeout(function(){
         commitVoice(tx);
         var mi2=document.getElementById('mi');if(mi2)mi2.value='';
-      },800);
+      },350);
     }
   };
   recog.onerror=function(e){
