@@ -121,7 +121,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1783614217';
+var APP_V='1783615115';
 var justCleared=false;
 
 // ─── LANG ───
@@ -183,17 +183,15 @@ function classify(text){
 // ─── STATE ───
 var uid=0;
 function nid(){return++uid}
-var lang='en',tab='template',tmpl=[],shop=[],inp='',photo=null;
+var lang='en',tab='shopping',shop=[],inp='',photo=null;
 var listening=false,vmsg=null,vtm=null,ckid=null,recog=null;
 
 // ─── SAVE: localStorage + Firebase ───
 function sv(){
   // Strip photos for cloud save (too large)
-  var tClean=tmpl.map(function(x){var c={};for(var k in x)c[k]=x[k];c.photo=null;return c});
   var sClean=shop.map(function(x){var c={};for(var k in x)c[k]=x[k];c.photo=null;return c});
   // Local (with photos)
   try{
-    localStorage.setItem('sl3_t',JSON.stringify(tmpl));
     localStorage.setItem('sl3_s',JSON.stringify(shop));
     localStorage.setItem('sl3_l',lang);
   }catch(e){
@@ -204,7 +202,6 @@ function sv(){
   }
   // Firebase (without photos)
   try{
-    db.ref('devices/'+devId+'/template').set(tClean);
     db.ref('devices/'+devId+'/shopping').set(sClean);
     db.ref('devices/'+devId+'/lang').set(lang);
   }catch(e){}
@@ -216,17 +213,14 @@ function ld(){
   try{
     var hasNew=localStorage.getItem('sl3_t');
     if(!hasNew){
-      var oldT=JSON.parse(localStorage.getItem('sl2_t'));
       var oldS=JSON.parse(localStorage.getItem('sl2_s'));
       var oldL=localStorage.getItem('sl2_l');
-      if(oldT){localStorage.setItem('sl3_t',JSON.stringify(oldT));}
       if(oldS){localStorage.setItem('sl3_s',JSON.stringify(oldS));}
       if(oldL){localStorage.setItem('sl3_l',oldL);}
     }
   }catch(e){}
   // Local first (fast, has photos)
   try{
-    var a=JSON.parse(localStorage.getItem('sl3_t'));if(a)tmpl=a;
     var b=JSON.parse(localStorage.getItem('sl3_s'));if(b)shop=b;
     var c=localStorage.getItem('sl3_l');if(c)lang=c;
   }catch(e){}
@@ -245,13 +239,6 @@ function ld(){
   db.ref('devices/'+devId).once('value',function(snap){
     var d=snap.val();
     if(d){
-      if(d.template){
-        // Merge: use Firebase data but preserve local photos
-        var photoMap={};
-        for(var i=0;i<tmpl.length;i++){if(tmpl[i].photo)photoMap[tmpl[i].text]=tmpl[i].photo;}
-        tmpl=d.template;
-        for(var i=0;i<tmpl.length;i++){if(!tmpl[i].photo&&photoMap[tmpl[i].text])tmpl[i].photo=photoMap[tmpl[i].text];}
-      }
       if(d.shopping&&!justCleared){
         var photoMap2={};
         for(var i=0;i<shop.length;i++){if(shop[i].photo)photoMap2[shop[i].text]=shop[i].photo;}
@@ -283,7 +270,6 @@ function ld(){
 
 function fixUid(){
   var mx=0;
-  for(var i=0;i<tmpl.length;i++){if(tmpl[i].id>mx)mx=tmpl[i].id;}
   for(var i=0;i<shop.length;i++){if(shop[i].id>mx)mx=shop[i].id;}
   uid=mx;
 }
@@ -402,7 +388,6 @@ function R(){
   var t=TT[lang];var ct=CAT[lang];
   var act=[];var dn=[];
   for(var i=0;i<shop.length;i++){if(shop[i].done)dn.push(shop[i]);else act.push(shop[i]);}
-  var selCt=0;for(var i=0;i<tmpl.length;i++){if(tmpl[i].selected)selCt++;}
   var hasTarget=!!getSendTarget();
 
   var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><div style="display:flex;gap:6px"><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button><button class="hb" onclick="showHelp()">?</button></div></div>';
@@ -411,7 +396,7 @@ function R(){
   if(hasTarget)h+='<span style="margin-left:auto">'+t.paired+': <span class="id-code">'+getSendTarget()+'</span></span>';
   h+='</div>';
   h+='<div class="ts">';
-  var tabs=[['template',t.tmpl,tmpl.length],['shopping',t.shop,act.length],['completed',t.comp,dn.length]];
+  var tabs=[['shopping',t.shop,act.length],['completed',t.comp,dn.length]];
   for(var i=0;i<tabs.length;i++){
     var k=tabs[i][0],l=tabs[i][1],n=tabs[i][2];
     var cls=k===tab?' a':'';
@@ -420,39 +405,17 @@ function R(){
   }
   h+='</div></div>';
 
-  if(tab==='template'||tab==='shopping'){
-    var fn=tab==='template'?'addT':'addS';
-    h+='<div class="ia"><div class="ir"><input type="text" id="mi" placeholder="'+t.ph+'" oninput="inp=this.value" onkeydown="if(event.key===\'Enter\')'+fn+'()">';
+  if(tab==='shopping'){
+    h+='<div class="ia"><div class="ir"><input type="text" id="mi" placeholder="'+t.ph+'" oninput="inp=this.value" onkeydown="if(event.key===\'Enter\')addS()">';
     h+='<button class="ib" onclick="pPh()">'+camsvg+'</button>';
     h+='<button class="ib'+(listening?' ma':'')+'" onclick="tgV()">'+micsvg+'</button>';
-    h+='<button class="ab" onclick="'+fn+'()">'+t.add+'</button></div>';
+    h+='<button class="ab" onclick="addS()">'+t.add+'</button></div>';
     if(vmsg)h+='<div class="vt">'+(listening?'<span class="vd"></span>':'')+vmsg+'</div>';
     if(photo)h+='<div class="pp"><img src="'+photo+'"><button onclick="photo=null;R()">&#10005;</button></div>';
     h+='</div>';
   }
 
   h+='<div class="la">';
-
-  if(tab==='template'){
-    if(tmpl.length>0){
-      h+='<div class="ta"><button class="sb" onclick="selA()">'+t.selA+'</button><button class="sb" onclick="deA()">'+t.deA+'</button><button class="stb" onclick="goShop()">'+t.start+' ('+selCt+')</button></div>';
-    }else{
-      h+='<div class="em"><div>'+t.emptyT+'</div><div class="ems">'+t.emptyTS+'</div></div>';
-    }
-    var gs=grp(tmpl);
-    for(var gi=0;gi<gs.length;gi++){
-      var g=gs[gi];
-      h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+(ct[g.c]||g.c)+'</span><span class="cc">'+g.items.length+'</span></div>';
-      for(var ii=0;ii<g.items.length;ii++){
-        var it=g.items[ii];
-        h+='<div class="it" style="animation-delay:'+ii*30+'ms"><button class="sx'+(it.selected?' on':'')+'" onclick="tgSel('+it.id+')">'+(it.selected?chk:'')+'</button><span class="tx'+(it.selected?'':' off')+'">'+esc(it.text)+'</span>';
-        if(it.photo)h+='<img class="th" src="'+it.photo+'" data-id="'+it.id+'" data-type="t">';
-        h+='<div class="qc"><button class="qb" onclick="sQty('+it.id+',-1)">&minus;</button><span class="qn">'+it.qty+'</span><button class="qb" onclick="sQty('+it.id+',1)">+</button></div>';
-        h+='<button class="db" onclick="delT('+it.id+')">'+xsvg+'</button></div>';
-      }
-      h+='</div>';
-    }
-  }
 
   if(tab==='shopping'){
     if(act.length>0){
@@ -508,40 +471,11 @@ function R(){
 function tgLang(){lang=lang==='en'?'ko':'en';sv();R()}
 function sTab(t){tab=t;R()}
 
-function addT(){
-  var mi=document.getElementById('mi');if(mi)inp=mi.value;
-  var txt=inp.trim();if(!txt)return;
-  tmpl.push({id:nid(),text:txt,category:classify(txt),qty:1,selected:true,photo:photo});
-  inp='';photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';sv();R();
-}
 function addS(){
   var mi=document.getElementById('mi');if(mi)inp=mi.value;
   var txt=inp.trim();if(!txt)return;
   shop.push({id:nid(),text:txt,category:classify(txt),qty:1,photo:photo,done:false});
   inp='';photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';sv();R();
-}
-function tgSel(id){for(var i=0;i<tmpl.length;i++){if(tmpl[i].id===id){tmpl[i].selected=!tmpl[i].selected;break;}}sv();R()}
-function sQty(id,d){for(var i=0;i<tmpl.length;i++){if(tmpl[i].id===id){tmpl[i].qty=Math.max(1,tmpl[i].qty+d);break;}}sv();R()}
-function delT(id){
-  var removed=null;
-  for(var i=0;i<tmpl.length;i++){if(tmpl[i].id===id){removed=tmpl[i];break;}}
-  tmpl=tmpl.filter(function(x){return x.id!==id});sv();R();
-  if(removed)showUndo(removed,'t');
-}
-function selA(){for(var i=0;i<tmpl.length;i++)tmpl[i].selected=true;sv();R()}
-function deA(){for(var i=0;i<tmpl.length;i++)tmpl[i].selected=false;sv();R()}
-
-function goShop(){
-  var keep=[];
-  for(var i=0;i<shop.length;i++){if(!shop[i].done)keep.push(shop[i]);}
-  var existing={};
-  for(var i=0;i<keep.length;i++){existing[keep[i].text.toLowerCase()]=true;}
-  for(var i=0;i<tmpl.length;i++){
-    if(tmpl[i].selected&&!existing[tmpl[i].text.toLowerCase()]){
-      keep.push({id:nid(),text:tmpl[i].text,category:tmpl[i].category,qty:tmpl[i].qty,photo:tmpl[i].photo,done:false});
-    }
-  }
-  shop=keep;tab='shopping';sv();R();
 }
 
 function chkOff(id){
@@ -570,7 +504,20 @@ function pPh(){
     el.onchange=function(){
       var f=this.files[0];if(!f)return;
       var r=new FileReader();
-      r.onload=function(e){compressPhoto(e.target.result,function(c){photo=c;R()})};
+      r.onload=function(e){
+        compressPhoto(e.target.result,function(c){
+          photo=c;
+          // Name already typed? Add the item with the photo immediately.
+          var mi2=document.getElementById('mi');
+          var txt=(mi2?mi2.value:inp).trim();
+          if(txt){
+            addS();
+          }else{
+            R();
+            showToast(lang==='ko'?'\uC0AC\uC9C4 \uC900\uBE44\uB428 \u2014 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694':'Photo ready \u2014 type a name');
+          }
+        });
+      };
       r.readAsDataURL(f);
     };
   }
@@ -591,7 +538,7 @@ function compressPhoto(dataURL,cb){
 
 function showPhId(id,type,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
-  var arr=type==='t'?tmpl:shop;var src=null;
+  var arr=shop;var src=null;
   for(var i=0;i<arr.length;i++){if(arr[i].id===id&&arr[i].photo){src=arr[i].photo;break;}}
   if(!src)return;
   var d=document.createElement('div');d.className='overlay';
@@ -623,13 +570,18 @@ function tgV(){
     // Duplicate guard: skip if same text just committed
     if(tx.toLowerCase()===lastCommitted.toLowerCase())return;
     lastCommitted=tx;
+    clearTimeout(fastTm);
     var c=classify(tx);
-    if(tab==='template'){tmpl.push({id:nid(),text:tx,category:c,qty:1,selected:true,photo:null});}
-    else{shop.push({id:nid(),text:tx,category:c,qty:1,photo:null,done:false});}
+    shop.push({id:nid(),text:tx,category:c,qty:1,photo:photo,done:false});
+    // Consume pending photo (voice items attach photos like typed ones)
+    photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';
     inp='';sv();R();
     vmsg='\u2714 '+tx;
     // Reset guard after 2s so the same item CAN be added again intentionally later
     setTimeout(function(){if(lastCommitted===tx)lastCommitted='';},2000);
+    // iOS delivers ONE cumulative transcript in continuous mode; stop after each
+    // item so the auto-restart (onend) begins a fresh session per item.
+    try{recog.stop();}catch(ex){}
   }
   recog.onresult=function(e){
     var last=e.results[e.results.length-1];
@@ -678,8 +630,7 @@ function showUndo(item,type){
   btn.onclick=function(){
     if(type==='c'){
       for(var i=0;i<shop.length;i++){if(shop[i].id===item.id){shop[i].done=false;break;}}
-    }else if(type==='t'){tmpl.push(item);}
-    else{shop.push(item);}
+    }else{shop.push(item);}
     sv();R();d.remove();clearTimeout(undoTm);
   };
   d.appendChild(label);d.appendChild(btn);
@@ -692,14 +643,12 @@ function showHelp(){
   var d=document.createElement('div');d.className='help-ov';
   d.innerHTML='<div class="help-hd"><div class="help-ti">Manual / \uC0AC\uC6A9 \uC124\uBA85\uC11C</div><button class="help-x" onclick="this.parentNode.parentNode.remove()">\u2715</button></div>'
   +'<div class="help-body">'
-  +'<div class="help-card"><div class="help-n">\u2460 Template / \uAE30\uBCF8 \uBAA9\uB85D</div><div class="help-en">Add items you regularly buy. They stay permanently. Each has checkbox, qty +/\u2212, delete.</div><div class="help-ko">\uC790\uC8FC \uC0AC\uB294 \uD56D\uBAA9\uC744 \uCD94\uAC00\uD558\uC138\uC694. \uC601\uAD6C \uC800\uC7A5. \uCCB4\uD06C\uBC15\uC2A4, \uC218\uB7C9, \uC0AD\uC81C \uBC84\uD2BC.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2461 Start Shopping / \uC7A5\uBCF4\uAE30 \uC2DC\uC791</div><div class="help-en">Uncheck items you don\'t need. Adjust qty. Tap Start Shopping.</div><div class="help-ko">\uBD88\uD544\uC694 \uD56D\uBAA9 \uD574\uC81C. \uC218\uB7C9 \uC870\uC808. \uC7A5\uBCF4\uAE30 \uC2DC\uC791 \uD0ED.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2462 Shopping / \uC7A5\uBCF4\uAE30</div><div class="help-en">Tap items to check off. Add extra items via input, camera, or voice.</div><div class="help-ko">\uD56D\uBAA9 \uD0ED\uD558\uBA74 \uCCB4\uD06C. \uC785\uB825/\uCE74\uBA54\uB77C/\uC74C\uC131\uC73C\uB85C \uCD94\uAC00 \uAC00\uB2A5.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2463 Completed / \uC644\uB8CC</div><div class="help-en">Checked items appear here. Trash icon to delete. Restore All to bring back.</div><div class="help-ko">\uC644\uB8CC \uD56D\uBAA9 \uD45C\uC2DC. \uD734\uC9C0\uD1B5 \uC0AD\uC81C. \uC804\uCCB4 \uBCF5\uC6D0 \uAC00\uB2A5.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2464 Voice / \uC74C\uC131</div><div class="help-en">Tap mic \u2192 speak \u2192 pause \u2192 auto-added. Keep talking. Tap mic to stop.</div><div class="help-ko">\uB9C8\uC774\uD06C \uD0ED \u2192 \uB9D0\uD558\uAE30 \u2192 \uBA48\uCDA4 \u2192 \uC790\uB3D9\uCD94\uAC00. \uACC4\uC18D \uB9D0\uD558\uC138\uC694.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2465 Camera / \uCE74\uBA54\uB77C</div><div class="help-en">Tap camera \u2192 photo attaches to next item. Tap thumbnail for full view.</div><div class="help-ko">\uCE74\uBA54\uB77C \uD0ED \u2192 \uB2E4\uC74C \uD56D\uBAA9\uC5D0 \uCCA8\uBD80. \uBBF8\uB9AC\uBCF4\uAE30 \uD0ED\uD558\uBA74 \uD655\uB300.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2466 Send to R / \uBCF4\uB0B4\uAE30</div><div class="help-en">Setup: exchange 6-letter IDs between phones. Then one tap sends your shopping list to the other phone instantly via cloud.</div><div class="help-ko">\uC124\uC815: \uD734\uB300\uD3F0 \uAC04 6\uC790 ID \uAD50\uD658. \uADF8 \uD6C4 \uD55C \uBC88 \uD0ED\uC73C\uB85C \uD074\uB77C\uC6B0\uB4DC\uB85C \uC989\uC2DC \uC804\uC1A1.</div></div>'
-  +'<div class="help-card"><div class="help-n">\u2467 Cloud Sync / \uD074\uB77C\uC6B0\uB4DC</div><div class="help-en">Data saved to Firebase cloud. Never lost. Green dot = connected. Red = offline (syncs when back online).</div><div class="help-ko">\uB370\uC774\uD130\uB294 Firebase \uD074\uB77C\uC6B0\uB4DC\uC5D0 \uC800\uC7A5. \uC808\uB300 \uC190\uC2E4 \uC5C6\uC74C. \uCD08\uB85D \uC810 = \uC5F0\uACB0. \uBE68\uAC04 \uC810 = \uC624\uD504\uB77C\uC778.</div></div>'
+  +'<div class="help-card"><div class="help-n">\u2460 Shopping / \uC7A5\uBCF4\uAE30</div><div class="help-en">Tap items to check off. Add extra items via input, camera, or voice.</div><div class="help-ko">\uD56D\uBAA9 \uD0ED\uD558\uBA74 \uCCB4\uD06C. \uC785\uB825/\uCE74\uBA54\uB77C/\uC74C\uC131\uC73C\uB85C \uCD94\uAC00 \uAC00\uB2A5.</div></div>'
+  +'<div class="help-card"><div class="help-n">\u2461 Completed / \uC644\uB8CC</div><div class="help-en">Checked items appear here. Trash icon to delete. Restore All to bring back.</div><div class="help-ko">\uC644\uB8CC \uD56D\uBAA9 \uD45C\uC2DC. \uD734\uC9C0\uD1B5 \uC0AD\uC81C. \uC804\uCCB4 \uBCF5\uC6D0 \uAC00\uB2A5.</div></div>'
+  +'<div class="help-card"><div class="help-n">\u2462 Voice / \uC74C\uC131</div><div class="help-en">Tap mic \u2192 speak \u2192 pause \u2192 auto-added. Keep talking. Tap mic to stop.</div><div class="help-ko">\uB9C8\uC774\uD06C \uD0ED \u2192 \uB9D0\uD558\uAE30 \u2192 \uBA48\uCDA4 \u2192 \uC790\uB3D9\uCD94\uAC00. \uACC4\uC18D \uB9D0\uD558\uC138\uC694.</div></div>'
+  +'<div class="help-card"><div class="help-n">\u2463 Camera / \uCE74\uBA54\uB77C</div><div class="help-en">Tap camera \u2192 photo attaches to next item. Tap thumbnail for full view.</div><div class="help-ko">\uCE74\uBA54\uB77C \uD0ED \u2192 \uB2E4\uC74C \uD56D\uBAA9\uC5D0 \uCCA8\uBD80. \uBBF8\uB9AC\uBCF4\uAE30 \uD0ED\uD558\uBA74 \uD655\uB300.</div></div>'
+  +'<div class="help-card"><div class="help-n">\u2464 Send to R / \uBCF4\uB0B4\uAE30</div><div class="help-en">Setup: exchange 6-letter IDs between phones. Then one tap sends your shopping list to the other phone instantly via cloud.</div><div class="help-ko">\uC124\uC815: \uD734\uB300\uD3F0 \uAC04 6\uC790 ID \uAD50\uD658. \uADF8 \uD6C4 \uD55C \uBC88 \uD0ED\uC73C\uB85C \uD074\uB77C\uC6B0\uB4DC\uB85C \uC989\uC2DC \uC804\uC1A1.</div></div>'
+  +'<div class="help-card"><div class="help-n">\u2465 Cloud Sync / \uD074\uB77C\uC6B0\uB4DC</div><div class="help-en">Data saved to Firebase cloud. Never lost. Green dot = connected. Red = offline (syncs when back online).</div><div class="help-ko">\uB370\uC774\uD130\uB294 Firebase \uD074\uB77C\uC6B0\uB4DC\uC5D0 \uC800\uC7A5. \uC808\uB300 \uC190\uC2E4 \uC5C6\uC74C. \uCD08\uB85D \uC810 = \uC5F0\uACB0. \uBE68\uAC04 \uC810 = \uC624\uD504\uB77C\uC778.</div></div>'
   +'</div>';
   document.body.appendChild(d);
 }
