@@ -121,7 +121,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1783615115';
+var APP_V='1783615958';
 var justCleared=false;
 
 // ─── LANG ───
@@ -565,11 +565,13 @@ function tgV(){
   recog.interimResults=true;recog.maxAlternatives=1;recog.continuous=true;
   var fastTm=null;
   var lastCommitted='';
+  var lastCommitAt=0;
   function commitVoice(tx){
     if(!tx)return;
     // Duplicate guard: skip if same text just committed
     if(tx.toLowerCase()===lastCommitted.toLowerCase())return;
     lastCommitted=tx;
+    lastCommitAt=Date.now();
     clearTimeout(fastTm);
     var c=classify(tx);
     shop.push({id:nid(),text:tx,category:c,qty:1,photo:photo,done:false});
@@ -587,13 +589,21 @@ function tgV(){
     var last=e.results[e.results.length-1];
     var tx=last[0].transcript.trim();
     if(last.isFinal&&tx){
+      // Dying-session final right after a timer commit is the same phrase,
+      // possibly extended ("test" -> "test one") — drop it. Content+time
+      // based, so it works regardless of final/onend event order.
+      if(lastCommitted&&(Date.now()-lastCommitAt)<700&&tx.toLowerCase().indexOf(lastCommitted.toLowerCase())===0){return;}
       clearTimeout(fastTm);
       commitVoice(tx);
     }else if(tx){
-      // Live preview + fast-commit: if text stays stable 350ms, commit early
+      // Live preview + fast-commit: commit when text stays stable 800ms
+      // (must exceed natural inter-word gaps, else phrases split in half)
       var mi=document.getElementById('mi');if(mi)mi.value=tx;
       clearTimeout(fastTm);
-      fastTm=setTimeout(function(){commitVoice(tx);var mi2=document.getElementById('mi');if(mi2)mi2.value='';},350);
+      fastTm=setTimeout(function(){
+        commitVoice(tx);
+        var mi2=document.getElementById('mi');if(mi2)mi2.value='';
+      },800);
     }
   };
   recog.onerror=function(e){
