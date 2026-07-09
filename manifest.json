@@ -2,9 +2,9 @@
   "name": "Shopping List",
   "short_name": "Shopping",
   "start_url": ".",
-  "display": "standalone",
-  "background_color": "#142E2D",
-  "theme_color": "#0ABAB5",
+  "display": "browser",
+  "background_color": "#F2F2F7",
+  "theme_color": "#007AFF",
   "icons": [
     {
       "src": "icon.svg",
