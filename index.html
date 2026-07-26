@@ -87,6 +87,12 @@ input::placeholder{color:#8E8E93}
 .sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .sync-on{background:#007AFF}
 .sync-off{background:#ff4444}
+.confirm-box{background:#FFFFFF;border-radius:16px;padding:22px 18px 16px;max-width:300px;width:100%;box-shadow:0 12px 44px rgba(0,0,0,.32);cursor:default}
+.confirm-msg{font-size:16px;font-weight:600;color:#1C1C1E;text-align:center;line-height:1.4;margin-bottom:6px}
+.confirm-sub{font-size:12px;color:#8E8E93;text-align:center;line-height:1.4;margin-bottom:18px}
+.confirm-row{display:flex;gap:10px}
+.confirm-cancel{flex:1;padding:13px 0;border-radius:12px;border:none;background:#E5E5EA;color:#007AFF;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.confirm-yes{flex:1;padding:13px 0;border-radius:12px;border:none;background:#FF3B30;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
@@ -489,19 +495,60 @@ function chkOff(id){
     if(item)showUndo(item,'c');
   },350);
 }
+// Confirmation gate: a whole-list wipe must never happen on a single stray tap.
+// Centered modal (away from the bottom link that was tapped) + backdrop-tap = cancel.
+function confirmClear(msg,sub,yesLabel,onYes){
+  var old=document.getElementById('confirmOv');if(old)old.remove();
+  var d=document.createElement('div');
+  d.className='overlay';d.id='confirmOv';d.style.cursor='default';
+  d.onclick=function(e){if(e.target===d)d.remove();};
+  var box=document.createElement('div');box.className='confirm-box';
+  var m=document.createElement('div');m.className='confirm-msg';m.textContent=msg;
+  var s=document.createElement('div');s.className='confirm-sub';s.textContent=sub;
+  var row=document.createElement('div');row.className='confirm-row';
+  var cancel=document.createElement('button');cancel.className='confirm-cancel';
+  cancel.textContent=lang==='ko'?'\uCDE8\uC18C':'Cancel';
+  cancel.onclick=function(){d.remove();};
+  var yes=document.createElement('button');yes.className='confirm-yes';
+  yes.textContent=yesLabel;
+  yes.onclick=function(){d.remove();onYes();};
+  row.appendChild(cancel);row.appendChild(yes);
+  box.appendChild(m);box.appendChild(s);box.appendChild(row);
+  d.appendChild(box);document.body.appendChild(d);
+}
 function clearShop(){
-  var removed=[];var keep=[];
-  for(var i=0;i<shop.length;i++){if(shop[i].done)keep.push(shop[i]);else removed.push(shop[i]);}
-  if(removed.length===0)return;
-  shop=keep;sv();R();
-  showUndoBulk(removed);
+  var pending=0;
+  for(var i=0;i<shop.length;i++){if(!shop[i].done)pending++;}
+  if(pending===0)return;
+  confirmClear(
+    lang==='ko'?pending+'\uAC1C \uD56D\uBAA9\uC744 \uBAA8\uB450 \uBE44\uC6B8\uAE4C\uC694?':'Clear all '+pending+' items?',
+    lang==='ko'?'\uC2E4\uD589 \uCDE8\uC18C\uB294 3\uCD08 \uB3D9\uC548 \uAC00\uB2A5\uD569\uB2C8\uB2E4.':'You can undo for 3 seconds afterward.',
+    lang==='ko'?'\uBAA9\uB85D \uBE44\uC6B0\uAE30':'Clear list',
+    function(){
+      var removed=[];var keep=[];
+      for(var i=0;i<shop.length;i++){if(shop[i].done)keep.push(shop[i]);else removed.push(shop[i]);}
+      if(removed.length===0)return;
+      shop=keep;sv();R();
+      showUndoBulk(removed);
+    }
+  );
 }
 function clearDone(){
-  var removed=[];var keep=[];
-  for(var i=0;i<shop.length;i++){if(shop[i].done)removed.push(shop[i]);else keep.push(shop[i]);}
-  if(removed.length===0)return;
-  shop=keep;sv();R();
-  showUndoBulk(removed);
+  var pending=0;
+  for(var i=0;i<shop.length;i++){if(shop[i].done)pending++;}
+  if(pending===0)return;
+  confirmClear(
+    lang==='ko'?'\uC644\uB8CC \uD56D\uBAA9 '+pending+'\uAC1C\uB97C \uBE44\uC6B8\uAE4C\uC694?':'Clear all '+pending+' completed items?',
+    lang==='ko'?'\uC2E4\uD589 \uCDE8\uC18C\uB294 3\uCD08 \uB3D9\uC548 \uAC00\uB2A5\uD569\uB2C8\uB2E4.':'You can undo for 3 seconds afterward.',
+    lang==='ko'?'\uC644\uB8CC \uD56D\uBAA9 \uBE44\uC6B0\uAE30':'Clear completed',
+    function(){
+      var removed=[];var keep=[];
+      for(var i=0;i<shop.length;i++){if(shop[i].done)removed.push(shop[i]);else keep.push(shop[i]);}
+      if(removed.length===0)return;
+      shop=keep;sv();R();
+      showUndoBulk(removed);
+    }
+  );
 }
 function showUndoBulk(items){
   var old=document.getElementById('undoToast');if(old)old.remove();
