@@ -103,16 +103,24 @@ input::placeholder{color:#8E8E93}
 <script>
 
 // ─── FIREBASE ───
-var fbApp=firebase.initializeApp({
-  apiKey:"AIzaSyCgJ-D58BSrqCi3eUOoQ3TzbvO6lzv-OUY",
-  authDomain:"shopping-list-app-2bc50.firebaseapp.com",
-  databaseURL:"https://shopping-list-app-2bc50-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId:"shopping-list-app-2bc50",
-  storageBucket:"shopping-list-app-2bc50.firebasestorage.app",
-  messagingSenderId:"359151999312",
-  appId:"1:359151999312:web:a610c1cf88d36acad6b455"
-});
-var db=firebase.database();
+// Guarded: if the gstatic CDN is unreachable (offline, blocked, file:// preview),
+// the firebase global is undefined. Unguarded, that threw here and killed the whole
+// script — no list, no rendering, blank app. Lists live in localStorage and need no
+// network, so a cloud failure must degrade to local-only, never take the app down.
+var fbApp=null,db=null,fbUp=false;
+try{
+  fbApp=firebase.initializeApp({
+    apiKey:"AIzaSyCgJ-D58BSrqCi3eUOoQ3TzbvO6lzv-OUY",
+    authDomain:"shopping-list-app-2bc50.firebaseapp.com",
+    databaseURL:"https://shopping-list-app-2bc50-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"shopping-list-app-2bc50",
+    storageBucket:"shopping-list-app-2bc50.firebasestorage.app",
+    messagingSenderId:"359151999312",
+    appId:"1:359151999312:web:a610c1cf88d36acad6b455"
+  });
+  db=firebase.database();
+  fbUp=true;
+}catch(e){fbUp=false;db=null;}
 var fbOK=false;
 
 // Device ID — generated once, stored locally
@@ -206,10 +214,12 @@ function sv(){
       localStorage.setItem('sl3_s',JSON.stringify(sClean));
     }catch(e2){}
   }
-  // Firebase (without photos)
+  // Firebase (without photos) — skipped entirely when the cloud is unavailable
   try{
-    db.ref('devices/'+devId+'/shopping').set(sClean);
-    db.ref('devices/'+devId+'/lang').set(lang);
+    if(fbUp&&db){
+      db.ref('devices/'+devId+'/shopping').set(sClean);
+      db.ref('devices/'+devId+'/lang').set(lang);
+    }
   }catch(e){}
 }
 
@@ -242,6 +252,11 @@ function ld(){
   }catch(e){}
   fixUid();
   // Then load from Firebase (authoritative, no photos)
+  // Cloud down? Finish the local-only load path immediately so the list still renders.
+  if(!fbUp||!db){
+    fbOK=false;loadDone=true;R();return;
+  }
+  try{
   db.ref('devices/'+devId).once('value',function(snap){
     var d=snap.val();
     if(d){
@@ -272,6 +287,7 @@ function ld(){
     if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
     R();
   });
+  }catch(e){fbOK=false;loadDone=true;R();}
 }
 
 function fixUid(){
@@ -301,7 +317,7 @@ function applyInbox(d){
     }
   }
   // Clear inbox
-  db.ref('inbox/'+devId).remove();
+  try{if(fbUp&&db)db.ref('inbox/'+devId).remove();}catch(e){}
   if(count>0){
     tab='shopping';
     sv();R();
@@ -310,6 +326,8 @@ function applyInbox(d){
 }
 
 function listenInbox(){
+  if(!fbUp||!db)return;
+  try{
   db.ref('inbox/'+devId).on('value',function(snap){
     var d=snap.val();
     if(!d)return;
@@ -318,11 +336,12 @@ function listenInbox(){
     if(!loadDone){pendingInbox=d;return;}
     applyInbox(d);
   });
+  }catch(e){}
 }
 
 // iPhone Safari suspends the connection in background; re-check on return
 document.addEventListener('visibilitychange',function(){
-  if(document.visibilityState==='visible'&&loadDone){
+  if(document.visibilityState==='visible'&&loadDone&&fbUp&&db){
     try{db.ref('inbox/'+devId).once('value',function(s){applyInbox(s.val());});}catch(e){}
   }
 });
@@ -366,10 +385,13 @@ function sendToR(){
     if(!shop[i].done)act.push({text:shop[i].text,category:shop[i].category,qty:shop[i].qty});
   }
   if(act.length===0)return;
+  if(!fbUp||!db){showToast(lang==='ko'?'\uC624\uD504\uB77C\uC778 \u2014 \uC804\uC1A1 \uBD88\uAC00':'Offline \u2014 cannot send');return;}
+  try{
   db.ref('inbox/'+target).set({items:act,from:devId,time:Date.now()},function(err){
     if(err){showToast(lang==='ko'?'\uC804\uC1A1 \uC2E4\uD328':'Send failed');}
     else{showToast(lang==='ko'?act.length+'\uAC1C \uC804\uC1A1\uB428!':act.length+' items sent!');}
   });
+  }catch(e){showToast(lang==='ko'?'\uC804\uC1A1 \uC2E4\uD328':'Send failed');}
 }
 
 // ─── HELPERS ───
