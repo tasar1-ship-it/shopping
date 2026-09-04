@@ -65,6 +65,7 @@ input::placeholder{color:#8E8E93}
 .rb{padding:6px 0 4px}
 .rbtn{display:flex;align-items:center;justify-content:center;width:100%;padding:9px 0;border-radius:11px;border:1.5px solid #007AFF;background:#E5E5EA;color:#007AFF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;gap:5px}
 .cpl{opacity:.55}
+.lk{margin-top:26px;padding-top:16px;border-top:1px solid #E5E5EA}
 .rbtn.dng{border-color:#ff4444;color:#ff4444;background:transparent}
 .clr{background:none;border:none;color:#AEAEB2;font-size:11px;font-weight:500;letter-spacing:.04em;cursor:pointer;font-family:inherit;padding:8px 16px}
 .em{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;color:#8E8E93;font-size:13px;text-align:center}
@@ -122,7 +123,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1788539480';
+var APP_V='1788540782';
 var justCleared=false;
 
 // ─── LANG ───
@@ -204,7 +205,7 @@ function classify(text){
 // ─── STATE ───
 var uid=0;
 function nid(){return++uid}
-var lang='en',tab='shopping',shop=[],inp='',photo=null;
+var lang='en',tab='shopping',shop=[],inp='',inpL='',photo=null;
 var listening=false,vmsg=null,vtm=null,ckid=null,recog=null;
 
 // ─── SAVE: localStorage + Firebase ───
@@ -404,6 +405,22 @@ var trsvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="c
 var sharesvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
 var gearsvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
+function renderShopItem(it,ii){
+  var isCk=it.id===ckid;
+  var h='<div class="it ck'+(isCk?' cki':'')+'" style="animation-delay:'+ii*30+'ms" onclick="chkOff('+it.id+')"><div class="ci'+(isCk?' on':'')+'">'+(isCk?chk:'')+'</div><span class="tx'+(isCk?' off':'')+'">'+esc(it.text)+'</span>';
+  if(it.qty>1)h+='<span class="qg">&times;'+it.qty+'</span>';
+  if(it.photo)h+='<img class="th" src="'+it.photo+'" data-id="'+it.id+'" data-type="s">';
+  h+='</div>';
+  return h;
+}
+function addLukas(){
+  var el=document.getElementById('lmi');if(el)inpL=el.value;
+  var txt=inpL.trim();if(!txt)return;
+  shop.push({id:nid(),text:txt,category:'Lukas',qty:1,photo:null,done:false});
+  inpL='';sv();R();
+  var el2=document.getElementById('lmi');if(el2)el2.focus();
+}
+
 // ─── RENDER ───
 function R(){
   var t=TT[lang];var ct=CAT[lang];
@@ -451,20 +468,22 @@ function R(){
     }
     if(act.length===0)h+='<div class="em"><div>'+t.empty+'</div></div>';
     var gs=grp(act);
+    var lukasItems=[];
     for(var gi=0;gi<gs.length;gi++){
       var g=gs[gi];
+      if(g.c==='Lukas'){lukasItems=g.items;continue;}
       h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+(ct[g.c]||g.c)+'</span><span class="cc">'+g.items.length+'</span></div>';
       for(var ii=0;ii<g.items.length;ii++){
-        var it=g.items[ii];
-        var isCk=it.id===ckid;
-        h+='<div class="it ck'+(isCk?' cki':'')+'" style="animation-delay:'+ii*30+'ms" onclick="chkOff('+it.id+')"><div class="ci'+(isCk?' on':'')+'">'+(isCk?chk:'')+'</div><span class="tx'+(isCk?' off':'')+'">'+esc(it.text)+'</span>';
-        if(it.qty>1)h+='<span class="qg">&times;'+it.qty+'</span>';
-        if(it.photo)h+='<img class="th" src="'+it.photo+'" data-id="'+it.id+'" data-type="s">';
-        h+='</div>';
+        h+=renderShopItem(g.items[ii],ii);
       }
       h+='</div>';
     }
-    if(act.length>0)h+='<div style="text-align:center;padding:14px 0 4px"><button class="clr" onclick="clearShop()">'+(lang==='ko'?'\uBAA9\uB85D \uBE44\uC6B0\uAE30':'Clear list')+'</button></div>';
+    if(act.length-lukasItems.length>0)h+='<div style="text-align:center;padding:14px 0 4px"><button class="clr" onclick="clearShop()">'+(lang==='ko'?'\uBAA9\uB85D \uBE44\uC6B0\uAE30':'Clear list')+'</button></div>';
+    // Persistent Lukas section (always visible, own input, any kind of item)
+    h+='<div class="lk"><div class="ch"><span class="cd"></span><span class="cn">'+(ct['Lukas']||'Lukas')+'</span><span class="cc">'+lukasItems.length+'</span></div>';
+    for(var li=0;li<lukasItems.length;li++){h+=renderShopItem(lukasItems[li],li);}
+    h+='<div class="ir" style="margin-top:6px"><input type="text" id="lmi" placeholder="'+(lang==='ko'?'\uB8E8\uCE74\uC2A4 \uD56D\uBAA9 \uCD94\uAC00...':'Add for Lukas...')+'" oninput="inpL=this.value" onkeydown="if(event.key===\'Enter\')addLukas()"><button class="ab" onclick="addLukas()">'+t.add+'</button></div>';
+    h+='</div>';
   }
 
   if(tab==='completed'){
@@ -487,6 +506,7 @@ function R(){
   h+='</div>';
   document.getElementById('app').innerHTML=h;
   var mi=document.getElementById('mi');if(mi)mi.value=inp;
+  var lm=document.getElementById('lmi');if(lm)lm.value=inpL;
 }
 
 // ─── ACTIONS ───
@@ -627,6 +647,19 @@ function tgV(){
   startVoiceSession();
 }
 
+var VFIX={'breath':'bread','bred':'bread','brad':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
+var VFIXP=[['but her','butter'],['all live','olive'],['all lives','olives'],['orange use','orange juice'],['apple use','apple juice'],['to mate oh','tomato'],['dish washer','dishwasher'],['tooth paste','toothpaste']];
+function fixVoice(tx){
+  var t=' '+tx.toLowerCase().replace(/\s+/g,' ').trim()+' ';
+  // phrase-level corrections first
+  for(var i=0;i<VFIXP.length;i++){t=t.split(' '+VFIXP[i][0]+' ').join(' '+VFIXP[i][1]+' ');}
+  // word-level corrections
+  var words=t.trim().split(' ');
+  for(var j=0;j<words.length;j++){if(VFIX.hasOwnProperty(words[j]))words[j]=VFIX[words[j]];}
+  var out=words.join(' ');
+  // keep the recognizer's capitalisation style: capitalise first letter
+  return out.charAt(0).toUpperCase()+out.slice(1);
+}
 var _lastVoiceText='',_lastVoiceAt=0;
 
 function startVoiceSession(){
@@ -677,6 +710,7 @@ function startVoiceSession(){
 }
 
 function commitVoice(tx){
+  tx=fixVoice(tx);
   // Duplicate guard: identical text within 2.5s (double-final events) is dropped
   var now=Date.now();
   if(tx.toLowerCase()===_lastVoiceText.toLowerCase()&&(now-_lastVoiceAt)<2500)return;
