@@ -99,16 +99,29 @@ input::placeholder{color:#8E8E93}
 <script>
 
 // ─── FIREBASE ───
-var fbApp=firebase.initializeApp({
-  apiKey:"AIzaSyCgJ-D58BSrqCi3eUOoQ3TzbvO6lzv-OUY",
-  authDomain:"shopping-list-app-2bc50.firebaseapp.com",
-  databaseURL:"https://shopping-list-app-2bc50-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId:"shopping-list-app-2bc50",
-  storageBucket:"shopping-list-app-2bc50.firebasestorage.app",
-  messagingSenderId:"359151999312",
-  appId:"1:359151999312:web:a610c1cf88d36acad6b455"
-});
-var db=firebase.database();
+// ─── GLOBAL ERROR CATCHER (diagnostics banner) ───
+window.onerror=function(msg,src,line){try{showErr('JS error: '+msg+' (line '+line+')');}catch(e){}};
+function showErr(msg){
+  var b=document.getElementById('errbar');
+  if(!b){b=document.createElement('div');b.id='errbar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:3000;background:#B00020;color:#fff;font:12px -apple-system,sans-serif;padding:8px 12px;word-break:break-word';document.body.appendChild(b);}
+  b.textContent=msg;
+}
+
+var fbUp=false,db=null,fbErr='';
+try{
+  if(typeof firebase==='undefined')throw new Error('Firebase SDK not loaded');
+  firebase.initializeApp({
+    apiKey:"AIzaSyCgJ-D58BSrqCi3eUOoQ3TzbvO6lzv-OUY",
+    authDomain:"shopping-list-app-2bc50.firebaseapp.com",
+    databaseURL:"https://shopping-list-app-2bc50-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"shopping-list-app-2bc50",
+    storageBucket:"shopping-list-app-2bc50.firebasestorage.app",
+    messagingSenderId:"359151999312",
+    appId:"1:359151999312:web:a610c1cf88d36acad6b455"
+  });
+  db=firebase.database();
+  fbUp=true;
+}catch(e){fbUp=false;fbErr=String(e&&e.message||e);}
 var fbOK=false;
 
 // Device ID — generated once, stored locally
@@ -123,7 +136,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1788540782';
+var APP_V='1789731547';
 var justCleared=false;
 
 // ─── LANG ───
@@ -223,10 +236,10 @@ function sv(){
     }catch(e2){}
   }
   // Firebase (without photos)
-  try{
+  if(fbUp){try{
     db.ref('devices/'+devId+'/shopping').set(sClean);
     db.ref('devices/'+devId+'/lang').set(lang);
-  }catch(e){}
+  }catch(e){}}
 }
 
 // ─── LOAD: localStorage first, then Firebase overwrites ───
@@ -257,8 +270,12 @@ function ld(){
     }
   }catch(e){}
   fixUid();
+  if(!fbUp){fbOK=false;loadDone=true;if(pendingInbox){pendingInbox=null;}R();return;}
+  // Watchdog: if the cloud neither answers nor errors within 5s, go local and deliver any waiting inbox
+  setTimeout(function(){if(!loadDone){loadDone=true;fbOK=false;fbErr='cloud timeout';if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}R();}},5000);
   // Then load from Firebase (authoritative, no photos)
-  db.ref('devices/'+devId).once('value',function(snap){
+  try{db.ref('devices/'+devId).once('value',function(snap){
+    if(loadDone){fbOK=true;fbErr='';sv();R();return;} // late answer after watchdog: local wins, push it up
     var d=snap.val();
     if(d){
       if(d.shopping&&!justCleared){
@@ -283,11 +300,11 @@ function ld(){
       R();
     }
   },function(err){
-    fbOK=false;
+    fbOK=false;fbErr=String(err&&err.message||err);
     loadDone=true;
     if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
     R();
-  });
+  });}catch(e){fbOK=false;fbErr=String(e&&e.message||e);loadDone=true;R();}
 }
 
 function fixUid(){
@@ -317,7 +334,7 @@ function applyInbox(d){
     }
   }
   // Clear inbox
-  db.ref('inbox/'+devId).remove();
+  if(fbUp){try{db.ref('inbox/'+devId).remove();}catch(e){}}
   if(count>0){
     tab='shopping';
     sv();R();
@@ -326,6 +343,7 @@ function applyInbox(d){
 }
 
 function listenInbox(){
+  if(!fbUp)return;
   db.ref('inbox/'+devId).on('value',function(snap){
     var d=snap.val();
     if(!d)return;
@@ -338,7 +356,7 @@ function listenInbox(){
 
 // iPhone Safari suspends the connection in background; re-check on return
 document.addEventListener('visibilitychange',function(){
-  if(document.visibilityState==='visible'&&loadDone){
+  if(document.visibilityState==='visible'&&loadDone&&fbUp){
     try{db.ref('inbox/'+devId).once('value',function(s){applyInbox(s.val());});}catch(e){}
   }
 });
@@ -375,6 +393,7 @@ function saveTarget(){
 }
 
 function sendToR(){
+  if(!fbUp||!fbOK){showToast(lang==='ko'?'\uC624\uD504\uB77C\uC778 \u2014 \uC804\uC1A1 \uBD88\uAC00':'Offline \u2014 cannot send');return;}
   var target=getSendTarget();
   if(!target){setupSend();return;}
   var act=[];
@@ -430,8 +449,10 @@ function R(){
 
   var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><div style="display:flex;gap:6px"><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button></div></div>';
   // ID bar
-  h+='<div class="id-bar"><span class="sync-dot '+(fbOK?'sync-on':'sync-off')+'"></span>'+t.myId+': <span class="id-code">'+devId+'</span>';
-  if(hasTarget)h+='<span style="margin-left:auto">'+t.paired+': <span class="id-code">'+getSendTarget()+'</span></span>';
+  var hasSR=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+  var diag='v'+String(APP_V).slice(-4)+' \u00B7 '+(fbUp?(fbOK?'cloud ok':'cloud ERR'):'no SDK')+' \u00B7 '+(hasSR?'mic api':'NO MIC API');
+  h+='<div class="id-bar"><span class="sync-dot '+(fbOK?'sync-on':'sync-off')+'"></span>'+t.myId+': <span class="id-code">'+devId+'</span><span style="margin-left:auto;font-size:10px;opacity:.8">'+diag+'</span>';
+  if(hasTarget)h+='<span style="margin-left:10px">'+t.paired+': <span class="id-code">'+getSendTarget()+'</span></span>';
   h+='</div>';
   h+='<div class="ts">';
   var tabs=[['shopping',t.shop,act.length],['completed',t.comp,dn.length]];
@@ -447,6 +468,7 @@ function R(){
     h+='<div class="ia"><div class="ir"><input type="text" id="mi" placeholder="'+t.ph+'" oninput="inp=this.value" onkeydown="if(event.key===\'Enter\')addS()">';
     h+='<button class="ib" onclick="pPh()">'+camsvg+'</button>';
     h+='<button class="ib'+(listening?' ma':'')+'" onclick="tgV()">'+micsvg+'</button>';
+    if(aiOn())h+='<button class="ib'+(aiArmed?' ma':'')+'" onclick="tapAI()" title="Describe">\u2726</button>';
     h+='<button class="ab" onclick="addS()">'+t.add+'</button></div>';
     if(vmsg)h+='<div class="vt">'+(listening?'<span class="vd"></span>':'')+vmsg+'</div>';
     if(photo)h+='<div class="pp"><img src="'+photo+'"><button onclick="photo=null;R()">&#10005;</button></div>';
@@ -507,6 +529,8 @@ function R(){
   document.getElementById('app').innerHTML=h;
   var mi=document.getElementById('mi');if(mi)mi.value=inp;
   var lm=document.getElementById('lmi');if(lm)lm.value=inpL;
+  if(!fbUp&&fbErr)showErr('Cloud unavailable: '+fbErr+' \u2014 list works locally');
+  else if(fbUp&&loadDone&&!fbOK&&fbErr)showErr('Cloud rejected: '+fbErr);
 }
 
 // ─── ACTIONS ───
@@ -531,8 +555,9 @@ function chkOff(id){
 }
 function clearShop(){
   var removed=[];var keep=[];
-  for(var i=0;i<shop.length;i++){if(shop[i].done)keep.push(shop[i]);else removed.push(shop[i]);}
+  for(var i=0;i<shop.length;i++){if(shop[i].done||shop[i].category==='Lukas')keep.push(shop[i]);else removed.push(shop[i]);}
   if(removed.length===0)return;
+  if(!window.confirm(lang==='ko'?'\uD56D\uBAA9 '+removed.length+'\uAC1C\uB97C \uBAA8\uB450 \uC9C0\uC6B8\uAE4C\uC694?':'Clear all '+removed.length+' items?'))return;
   shop=keep;sv();R();
   showUndoBulk(removed);
 }
@@ -660,6 +685,55 @@ function fixVoice(tx){
   // keep the recognizer's capitalisation style: capitalise first letter
   return out.charAt(0).toUpperCase()+out.slice(1);
 }
+// ─── AI DESCRIBE (dormant until AI_URL/AI_TOKEN are set) ───
+var AI_URL='__AI_URL__';
+var AI_TOKEN='__AI_TOKEN__';
+function aiOn(){return AI_URL.indexOf('__')!==0&&AI_URL.indexOf('http')===0;}
+var aiArmed=false,aiBusy=false;
+var lastVoiceItemId=null,lastVoiceItemAt=0;
+
+function tapAI(){
+  if(!aiOn())return;
+  var mi=document.getElementById('mi');var typed=mi?mi.value.trim():'';
+  if(typed){inp='';if(mi)mi.value='';resolveAI(typed);return;}
+  aiArmed=!aiArmed;
+  if(aiArmed){
+    vmsg=lang==='ko'?'\uC5B4\uB5A4 \uBB3C\uAC74\uC778\uC9C0 \uC124\uBA85\uD574 \uC8FC\uC138\uC694...':'Describe the item...';
+    if(!listening){listening=true;R();startVoiceSession();return;}
+  }else{vmsg=listening?(lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...'):null;}
+  R();
+}
+
+function resolveAI(desc){
+  if(!aiOn()||aiBusy)return;
+  aiBusy=true;
+  showToast(lang==='ko'?'\uC0DD\uAC01 \uC911...':'Thinking...');
+  var hint='';
+  if(lastVoiceItemId){for(var i=0;i<shop.length;i++){if(shop[i].id===lastVoiceItemId){hint=shop[i].text;break;}}}
+  var cats=[];for(var k in CAT.en){if(k!=='Other')cats.push(k);}
+  fetch(AI_URL,{method:'POST',headers:{'content-type':'application/json','x-app-token':AI_TOKEN},
+    body:JSON.stringify({description:desc,lang:lang,heard:hint,categories:cats})})
+  .then(function(r){return r.text();})
+  .then(function(txt){
+    aiBusy=false;
+    var j=null;
+    try{j=JSON.parse(txt.replace(/```json|```/g,'').trim());}catch(e){}
+    if(!j||!j.name){showToast(lang==='ko'?'\uC54C \uC218 \uC5C6\uC74C':'Could not identify');R();return;}
+    var name=String(j.name).trim();
+    var cat=(j.category&&CAT.en[j.category])?j.category:classify(name);
+    var replaced=null;
+    if(lastVoiceItemId&&(Date.now()-lastVoiceItemAt)<90000){
+      for(var i=0;i<shop.length;i++){
+        if(shop[i].id===lastVoiceItemId&&!shop[i].done){replaced=shop[i].text;shop[i].text=name;shop[i].category=cat;break;}
+      }
+    }
+    if(replaced===null){shop.push({id:nid(),text:name,category:cat,qty:1,photo:photo,done:false});photo=null;}
+    lastVoiceItemId=null;
+    sv();R();
+    showToast(replaced!==null?(replaced+' \u2192 '+name):('\u2714 '+name));
+  })
+  .catch(function(){aiBusy=false;showToast(lang==='ko'?'AI \uC0AC\uC6A9 \uBD88\uAC00':'AI unavailable');R();});
+}
 var _lastVoiceText='',_lastVoiceAt=0;
 
 function startVoiceSession(){
@@ -690,7 +764,8 @@ function startVoiceSession(){
       showVM(lang==='ko'?'\uB9C8\uC774\uD06C \uAD8C\uD55C \uD544\uC694':'Mic access needed');
       return;
     }
-    // no-speech / aborted / network: stay in listening mode; onend restarts
+    if(e.error!=='no-speech'&&e.error!=='aborted'){showVM('Voice: '+e.error);}
+    // stay in listening mode; onend restarts
   };
   r.onend=function(){
     if(recog!==r)return;        // superseded session
@@ -710,13 +785,16 @@ function startVoiceSession(){
 }
 
 function commitVoice(tx){
+  if(aiArmed){aiArmed=false;vmsg=listening?(lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...'):null;resolveAI(tx);return;}
   tx=fixVoice(tx);
   // Duplicate guard: identical text within 2.5s (double-final events) is dropped
   var now=Date.now();
   if(tx.toLowerCase()===_lastVoiceText.toLowerCase()&&(now-_lastVoiceAt)<2500)return;
   _lastVoiceText=tx;_lastVoiceAt=now;
   var c=classify(tx);
-  shop.push({id:nid(),text:tx,category:c,qty:1,photo:photo,done:false});
+  var vid=nid();
+  shop.push({id:vid,text:tx,category:c,qty:1,photo:photo,done:false});
+  lastVoiceItemId=vid;lastVoiceItemAt=Date.now();
   // Consume pending photo (voice items attach photos like typed ones)
   photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';
   inp='';
