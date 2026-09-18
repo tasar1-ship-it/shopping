@@ -136,7 +136,7 @@ function getDevId(){
 var devId=getDevId();
 
 // Build stamp — replaced by deploy.sh on each deploy; lists clear when it changes
-var APP_V='1789731547';
+var APP_V='1789731934';
 var justCleared=false;
 
 // ─── LANG ───
@@ -742,20 +742,70 @@ function startVoiceSession(){
   var r=new SR();
   recog=r;
   r.lang=lang==='ko'?'ko-KR':'en-US';
-  r.continuous=false;        // ONE utterance per session: no cumulative transcript, no doubles
-  r.interimResults=true;     // interim only for live preview, never committed
+  r.continuous=true;       // mic stays open: no restart gap between items
+  r.interimResults=true;   // drafts drive fast commits; finals correct them in place
   r.maxAlternatives=1;
-  var committed=false;
+  // Per-session transcript bookkeeping (iOS delivers one cumulative transcript)
+  var committedWords=0;    // words of the transcript already turned into items
+  var lastId=null,lastStart=0,lastCount=0,lastText='',lastDraftAt=0;
+  var tm=null;
+  var DRAFT_MS=400;        // stability window: item lands this long after you stop talking
+
+  function fullTranscript(e){
+    var parts=[];
+    for(var i=0;i<e.results.length;i++){var t=e.results[i]&&e.results[i][0]?e.results[i][0].transcript:'';if(t)parts.push(t);}
+    return parts.join(' ').replace(/\s+/g,' ').trim();
+  }
+  function commitTail(words){
+    var tail=words.slice(committedWords).join(' ').trim();
+    if(!tail)return;
+    var id=commitVoice(tail);
+    if(id){lastId=id;lastStart=committedWords;lastCount=words.length-committedWords;lastText=tail;lastDraftAt=Date.now();}
+    committedWords=words.length;
+    var mi=document.getElementById('mi');if(mi)mi.value='';
+  }
+  function reviseLast(words){
+    // The recognizer may re-spell words it already gave us; apply that to the last item in place
+    if(!lastId||lastCount<=0)return;
+    var seg=words.slice(lastStart,lastStart+lastCount).join(' ').trim();
+    if(!seg||seg.toLowerCase()===lastText.toLowerCase())return;
+    var fixed=fixVoice(seg);
+    for(var i=0;i<shop.length;i++){
+      if(shop[i].id===lastId){shop[i].text=fixed;shop[i].category=classify(fixed);break;}
+    }
+    lastText=seg;sv();R();
+  }
   r.onresult=function(e){
-    var res=e.results[e.results.length-1];
-    var tx=res[0].transcript.trim();
-    if(!tx)return;
-    if(res.isFinal){
-      if(committed)return;
-      committed=true;
-      commitVoice(tx);
+    var full=fullTranscript(e);
+    var words=full?full.split(' '):[];
+    if(words.length<committedWords){ // transcript was reset by the engine: start fresh bookkeeping
+      committedWords=0;lastId=null;lastCount=0;lastText='';
+    }
+    reviseLast(words);
+    var last=e.results[e.results.length-1];
+    var isFinal=!!(last&&last.isFinal);
+    var tail=words.slice(committedWords).join(' ');
+    if(isFinal){
+      var hadPending=(tm!==null);
+      clearTimeout(tm);tm=null;
+      if(hadPending&&tail){
+        commitTail(words);                 // you were mid-way into a new item: it is its own item
+      }else if(lastId&&(Date.now()-lastDraftAt)<3000&&words.length>lastStart){
+        // Final re-spelling / re-splitting of the draft you just gave: correct it in place
+        var seg=words.slice(lastStart).join(' ').trim();
+        if(seg&&seg.toLowerCase()!==lastText.toLowerCase()){
+          var fixed=fixVoice(seg);
+          for(var i=0;i<shop.length;i++){if(shop[i].id===lastId){shop[i].text=fixed;shop[i].category=classify(fixed);break;}}
+          lastText=seg;sv();R();
+        }
+        lastCount=words.length-lastStart;committedWords=words.length;
+      }else{
+        commitTail(words);
+      }
     }else{
-      var mi=document.getElementById('mi');if(mi)mi.value=tx;
+      var mi=document.getElementById('mi');if(mi)mi.value=tail;
+      clearTimeout(tm);
+      if(tail){tm=setTimeout(function(){tm=null;commitTail(words);},DRAFT_MS);}
     }
   };
   r.onerror=function(e){
@@ -765,42 +815,35 @@ function startVoiceSession(){
       return;
     }
     if(e.error!=='no-speech'&&e.error!=='aborted'){showVM('Voice: '+e.error);}
-    // stay in listening mode; onend restarts
   };
   r.onend=function(){
-    if(recog!==r)return;        // superseded session
-    var mi=document.getElementById('mi');if(mi&&!committed)mi.value='';
-    if(listening){
-      // brief gap lets iOS release the audio session cleanly before the next utterance
-      setTimeout(function(){if(listening&&recog===r)startVoiceSession();},150);
-    }else{
-      vmsg=null;R();
-    }
+    if(recog!==r)return;
+    clearTimeout(tm);tm=null;
+    var mi=document.getElementById('mi');if(mi)mi.value='';
+    if(listening){setTimeout(function(){if(listening&&recog===r)startVoiceSession();},150);}
+    else{vmsg=null;R();}
   };
   try{r.start();}
-  catch(ex){
-    listening=false;vmsg=null;
-    showVM(lang==='ko'?'\uC74C\uC131 \uC624\uB958':'Voice error');
-  }
+  catch(ex){listening=false;vmsg=null;showVM(lang==='ko'?'\uC74C\uC131 \uC624\uB958':'Voice error');}
 }
 
 function commitVoice(tx){
-  if(aiArmed){aiArmed=false;vmsg=listening?(lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...'):null;resolveAI(tx);return;}
+  if(aiArmed){aiArmed=false;vmsg=listening?(lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...'):null;resolveAI(tx);return null;}
   tx=fixVoice(tx);
-  // Duplicate guard: identical text within 2.5s (double-final events) is dropped
   var now=Date.now();
-  if(tx.toLowerCase()===_lastVoiceText.toLowerCase()&&(now-_lastVoiceAt)<2500)return;
+  if(tx.toLowerCase()===_lastVoiceText.toLowerCase()&&(now-_lastVoiceAt)<2500)return null;
   _lastVoiceText=tx;_lastVoiceAt=now;
   var c=classify(tx);
   var vid=nid();
   shop.push({id:vid,text:tx,category:c,qty:1,photo:photo,done:false});
-  lastVoiceItemId=vid;lastVoiceItemAt=Date.now();
-  // Consume pending photo (voice items attach photos like typed ones)
+  lastVoiceItemId=vid;lastVoiceItemAt=now;
   photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';
   inp='';
   vmsg='\u2714 '+tx;
   sv();R();
+  return vid;
 }
+
 function showVM(m){vmsg=m;R();clearTimeout(vtm);vtm=setTimeout(function(){vmsg=null;R()},3500)}
 function showToast(msg){
   var d=document.createElement('div');d.className='toast';d.textContent=msg;
