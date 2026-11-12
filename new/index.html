@@ -130,7 +130,7 @@ input::placeholder{color:var(--muted)}
 // One file, plain old-style JavaScript (var and function only) so it runs on any iPhone.
 // The list lives on the phone (localStorage); the online database holds a backup of it and
 // carries lists sent from one phone to the other.
-var BUILD='n1';
+var BUILD='n2';
 
 // ---- Errors are shown, never swallowed silently ----
 window.onerror=function(msg,src,line){try{showErr('Error: '+msg+' (line '+line+')');}catch(e){}};
@@ -826,62 +826,94 @@ function vBegin(){
     vArm();
   },4000);
 }
-// Turning what the phone hears into items. Within one session the phone delivers one growing
-// transcript; this keeps count of the words already turned into items. A pause makes an item.
-var V_DRAFT_MS=400; // an item lands this long after the words stop changing
+// Turning what the phone hears into items.
+// The phone's log of 12 November 2026 shows how it reports speech: in separate entries, one per stretch of
+// speech; the words of an entry arrive as drafts up to about half a second apart, and its final wording
+// follows 2 to 3 seconds after you stop. So: words become an item when they have not changed for
+// V_DRAFT_MS (long enough that "paper ... towels" stays one item), and when the final wording of an entry
+// arrives it replaces the draft wording of the item instead of adding anything.
+var V_DRAFT_MS=1200;
 function vWords(s){
-  var committed=0,lastId=null,lastStart=0,lastCount=0,lastText='',lastAt=0,tm=null,pending=null;
-  function transcript(e){
-    var parts=[];
-    for(var i=0;i<e.results.length;i++){var t=e.results[i]&&e.results[i][0]?e.results[i][0].transcript:'';if(t)parts.push(t);}
-    return parts.join(' ').replace(/\s+/g,' ').replace(/^ | $/g,'');
+  var ent=[];            // per entry: {n: words already turned into items, items: [{id,count}], closed}
+  var tm=null,pend=null; // a draft waiting to become an item: {i: entry, words}
+  function wordsOf(r){
+    var t=r&&r[0]?String(r[0].transcript||''):'';
+    t=t.replace(/\s+/g,' ').replace(/^ | $/g,'');
+    return t?t.split(' '):[];
   }
   function box(v){var mi=document.getElementById('mi');if(mi)mi.value=v;}
   function retext(id,seg){
-    var it=find(id);
-    if(it&&!it.done){var fixed=fixVoice(seg);it.text=fixed;if(it.category!=='Lukas')it.category=classify(fixed);sv();R();}
+    var it=id?find(id):null;
+    if(!it||it.done)return;
+    var fixed=fixVoice(seg);
+    if(it.text===fixed)return;
+    it.text=fixed;if(it.category!=='Lukas')it.category=classify(fixed);
+    if(id===lastVoiceId)lastVoiceText=fixed;
+    sv();R();
   }
-  function commitTail(words){
-    var tail=words.slice(committed).join(' ');
+  function commit(i,words){
+    var en=ent[i],tail=words.slice(en.n).join(' ');
     if(!tail)return;
     var id=commitVoice(tail);
-    if(id){lastId=id;lastStart=committed;lastCount=words.length-committed;lastText=tail;lastAt=Date.now();}
-    committed=words.length;
+    en.items.push({id:id,count:words.length-en.n,text:tail});
+    en.n=words.length;
     box('');
   }
-  s.res=function(e){
-    var full=transcript(e);
-    var words=full?full.split(' '):[];
-    if(words.length<committed){committed=0;lastId=null;lastCount=0;lastText='';} // the phone started over
-    // the phone may re-spell words it already gave: correct the last item in place
-    if(lastId&&lastCount>0){
-      var seg0=words.slice(lastStart,lastStart+lastCount).join(' ');
-      if(seg0&&seg0.toLowerCase()!==lastText.toLowerCase()){retext(lastId,seg0);lastText=seg0;}
-    }
-    var last=e.results[e.results.length-1];
-    var isFinal=!!(last&&last.isFinal);
-    var tail=words.slice(committed).join(' ');
-    if(isFinal){
-      var hadPending=(tm!==null);
-      clearTimeout(tm);tm=null;
-      if(hadPending&&tail){
-        commitTail(words); // you were part-way into a new item: it is its own item
-      }else if(lastId&&(Date.now()-lastAt)<3000&&words.length>lastStart){
-        // the final wording of the item just added: correct it in place
-        var seg=words.slice(lastStart).join(' ');
-        if(seg&&seg.toLowerCase()!==lastText.toLowerCase()){retext(lastId,seg);lastText=seg;}
-        lastCount=words.length-lastStart;committed=words.length;
-      }else{
-        commitTail(words);
+  function finalize(i,words){
+    var en=ent[i],k,total=0;
+    if(!words.length)return;
+    if(en.items.length===0){commit(i,words);return;}
+    if(en.items.length===1){
+      // the whole entry became one item, perhaps from an early draft: the final wording replaces it
+      var one=en.items[0],fin=words.join(' ');
+      if(!one.id&&fin.toLowerCase()!==String(one.text).toLowerCase()){
+        // the draft was skipped as a repeat of the item before it, but the final wording says more
+        one.id=commitVoice(fin);one.text=fin;
       }
-    }else{
-      box(tail);
-      clearTimeout(tm);tm=null;
-      pending=words;
-      if(tail){tm=setTimeout(function(){tm=null;commitTail(words);},V_DRAFT_MS);}
+      retext(one.id,fin);
+      en.items[0].count=words.length;en.n=words.length;
+      return;
+    }
+    // you paused inside the entry, so it became several items
+    for(k=0;k<en.items.length;k++)total+=en.items[k].count;
+    if(words.length===total){
+      var at=0;
+      for(k=0;k<en.items.length;k++){retext(en.items[k].id,words.slice(at,at+en.items[k].count).join(' '));at+=en.items[k].count;}
+    }else if(words.length>total){
+      // more words than the drafts had: they finish the last item
+      var lastIt=en.items[en.items.length-1],from=total-lastIt.count;
+      retext(lastIt.id,words.slice(from).join(' '));
+      lastIt.count=words.length-from;en.n=words.length;
+    }
+    // fewer words than were already turned into items: leave the items as they are
+  }
+  s.res=function(e){
+    for(var i=0;i<e.results.length;i++){
+      if(!ent[i])ent[i]={n:0,items:[],closed:false};
+      var en=ent[i];
+      if(en.closed)continue;
+      var r=e.results[i],words=wordsOf(r);
+      if(r&&r.isFinal){
+        if(pend&&pend.i===i){clearTimeout(tm);tm=null;pend=null;}
+        vlog('entry '+(i+1)+' final, '+words.length+' words, '+en.items.length+' items so far');
+        finalize(i,words);
+        en.closed=true;
+        if(i===e.results.length-1)box('');
+      }else{
+        if(words.length<en.n)continue; // the phone shortened what it gave: wait for its final wording
+        var tail=words.slice(en.n).join(' ');
+        if(i===e.results.length-1)box(tail);
+        if(tail){
+          // a draft still waiting from an earlier entry becomes its item now
+          if(pend&&pend.i!==i){clearTimeout(tm);tm=null;var q=pend;pend=null;commit(q.i,q.words);}
+          clearTimeout(tm);
+          pend={i:i,words:words};
+          tm=setTimeout(function(){tm=null;var p=pend;pend=null;if(p)commit(p.i,p.words);},V_DRAFT_MS);
+        }
+      }
     }
   };
-  s.flush=function(){if(tm!==null){clearTimeout(tm);tm=null;if(pending)commitTail(pending);}};
+  s.flush=function(){if(tm!==null){clearTimeout(tm);tm=null;}var p=pend;pend=null;if(p)commit(p.i,p.words);};
 }
 // Words the phone often mishears for groceries
 var VFIX={'breath':'bread','bred':'bread','brad':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
@@ -894,13 +926,14 @@ function fixVoice(tx){
   var out=words.join(' ');
   return out.charAt(0).toUpperCase()+out.slice(1);
 }
-var lastVoiceText='',lastVoiceAt=0;
+var lastVoiceText='',lastVoiceAt=0,lastVoiceId=null;
 function commitVoice(tx){
   tx=fixVoice(tx);
   var now=Date.now();
   if(tx.toLowerCase()===lastVoiceText.toLowerCase()&&(now-lastVoiceAt)<2500)return null; // the same words delivered twice
   lastVoiceText=tx;lastVoiceAt=now;
   var it=addItem(tx,null,true);
+  lastVoiceId=it.id;
   vlog('item');
   return it.id;
 }
