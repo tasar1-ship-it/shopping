@@ -131,7 +131,7 @@ input::placeholder{color:var(--muted)}
 // One file, plain old-style JavaScript (var and function only) so it runs on any iPhone.
 // The list lives on the phone (localStorage); the online database holds a backup of it and
 // carries lists sent from one phone to the other.
-var BUILD='n3';
+var BUILD='n4';
 
 // ---- Errors are shown, never swallowed silently ----
 window.onerror=function(msg,src,line){try{showErr('Error: '+msg+' (line '+line+')');}catch(e){}};
@@ -979,14 +979,27 @@ function vWords(s){
   };
 }
 // Words the phone often mishears for groceries
-var VFIX={'breath':'bread','bred':'bread','brad':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
+var VFIX={'breath':'bread','bred':'bread','brad':'bread','brat':'bread','bret':'bread','brett':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
+var VALONE={'mild':1,'gem':1,'bear':1,'pair':1,'pairs':1,'time':1,'been':1,'tee':1,'yoga':1,'brat':1,'bret':1,'brett':1,'rise':1};
 var VFIXP=[['but her','butter'],['all live','olive'],['all lives','olives'],['orange use','orange juice'],['apple use','apple juice'],['to mate oh','tomato'],['dish washer','dishwasher'],['tooth paste','toothpaste']];
 function fixVoice(tx){
   var t=' '+String(tx).toLowerCase().replace(/\s+/g,' ').replace(/^ | $/g,'')+' ';
   for(var i=0;i<VFIXP.length;i++){t=t.split(' '+VFIXP[i][0]+' ').join(' '+VFIXP[i][1]+' ');}
   var words=t.replace(/^ | $/g,'').split(' ');
-  for(var j=0;j<words.length;j++){if(VFIX.hasOwnProperty(words[j]))words[j]=VFIX[words[j]];}
-  var out=words.join(' ');
+  for(var j=0;j<words.length;j++){
+    var wj=words[j];
+    // words in VALONE are real words too ("mild cheddar", "baby gem"): correct them only when said alone
+    if(VFIX.hasOwnProperty(wj)&&(words.length===1||!VALONE.hasOwnProperty(wj)))words[j]=VFIX[wj];
+  }
+  // The phone sometimes says a word and then its plural ("paper towel towels") or the same word twice:
+  // keep the later one only
+  var kept=[];
+  for(var k=0;k<words.length;k++){
+    var nx=words[k+1];
+    if(nx&&words[k].length>1&&(nx===words[k]||nx===words[k]+'s'||nx===words[k]+'es'))continue;
+    kept.push(words[k]);
+  }
+  var out=kept.join(' ');
   return out.charAt(0).toUpperCase()+out.slice(1);
 }
 var lastVoiceText='',lastVoiceAt=0,lastVoiceId=null;
