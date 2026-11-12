@@ -230,9 +230,10 @@ function sv(){
     localStorage.setItem('sl3_s',JSON.stringify(shop));
     localStorage.setItem('sl3_l',lang);
   }catch(e){
+    // Storage full (photos): keep the list itself, drop the photos
     try{
-      localStorage.setItem('sl3_t',JSON.stringify(tClean));
       localStorage.setItem('sl3_s',JSON.stringify(sClean));
+      localStorage.setItem('sl3_l',lang);
     }catch(e2){}
   }
   // Firebase (without photos)
@@ -246,17 +247,22 @@ function sv(){
 function ld(){
   // Migrate from old version (sl2_ keys) if no sl3_ data exists
   try{
-    var hasNew=localStorage.getItem('sl3_t');
-    if(!hasNew){
+    var hasNew=localStorage.getItem('sl3_s');
+    if(hasNew===null){
       var oldS=JSON.parse(localStorage.getItem('sl2_s'));
       var oldL=localStorage.getItem('sl2_l');
       if(oldS){localStorage.setItem('sl3_s',JSON.stringify(oldS));}
       if(oldL){localStorage.setItem('sl3_l',oldL);}
     }
   }catch(e){}
+  // Does this phone already hold a saved list? If so it is the master copy;
+  // the cloud copy is only a backup and must never overwrite it (it can be stale
+  // when earlier saves were made with no signal).
+  var hadLocal=false;
   // Local first (fast, has photos)
   try{
-    var b=JSON.parse(localStorage.getItem('sl3_s'));if(b)shop=b;
+    var b=JSON.parse(localStorage.getItem('sl3_s'));
+    if(b&&typeof b.length==='number'){shop=b;hadLocal=true;} // a damaged local copy does not count
     var c=localStorage.getItem('sl3_l');if(c)lang=c;
   }catch(e){}
   // New app version deployed? Clear shopping + completed (template preserved)
@@ -277,28 +283,18 @@ function ld(){
   try{db.ref('devices/'+devId).once('value',function(snap){
     if(loadDone){fbOK=true;fbErr='';sv();R();return;} // late answer after watchdog: local wins, push it up
     var d=snap.val();
-    if(d){
-      if(d.shopping&&!justCleared){
-        var photoMap2={};
-        for(var i=0;i<shop.length;i++){if(shop[i].photo)photoMap2[shop[i].text]=shop[i].photo;}
-        shop=d.shopping;
-        for(var i=0;i<shop.length;i++){if(!shop[i].photo&&photoMap2[shop[i].text])shop[i].photo=photoMap2[shop[i].text];}
-      }
+    fbOK=true;fbErr='';
+    if(d&&!hadLocal&&!justCleared){
+      // Nothing saved on this phone: restore the cloud backup
+      if(d.shopping&&d.shopping.length)shop=d.shopping;
       if(d.lang)lang=d.lang;
       fixUid();
-      fbOK=true;
-      if(justCleared){sv();justCleared=false;}
-      loadDone=true;
-      if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
-      R();
-    }else{
-      fbOK=true;
-      sv(); // First time: push local data to Firebase
-      justCleared=false;
-      loadDone=true;
-      if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
-      R();
     }
+    sv(); // this phone's list is the master: bring the cloud backup up to date
+    justCleared=false;
+    loadDone=true;
+    if(pendingInbox){applyInbox(pendingInbox);pendingInbox=null;}
+    R();
   },function(err){
     fbOK=false;fbErr=String(err&&err.message||err);
     loadDone=true;
@@ -326,9 +322,14 @@ function applyInbox(d){
   if(d.time&&d.time===lastInboxTime)return;
   if(d.time)lastInboxTime=d.time;
   var count=0;
+  // The sender always sends the whole list: skip items already waiting on this list
+  var have={};
+  for(var h=0;h<shop.length;h++){if(!shop[h].done)have[String(shop[h].text).toLowerCase().replace(/\s+/g,' ').trim()]=true;}
   for(var i=0;i<items.length;i++){
     var it=items[i];
     if(it.text){
+      var key=String(it.text).toLowerCase().replace(/\s+/g,' ').trim();
+      if(have[key])continue;
       shop.push({id:nid(),text:it.text,category:it.category||classify(it.text),qty:it.qty||1,photo:null,done:false});
       count++;
     }
@@ -339,6 +340,8 @@ function applyInbox(d){
     tab='shopping';
     sv();R();
     showToast((lang==='ko'?count+'\uAC1C \uD56D\uBAA9 \uC218\uC2E0!':count+' items received!'));
+  }else{
+    showToast(lang==='ko'?'\uC0C8 \uD56D\uBAA9 \uC5C6\uC74C':'Nothing new received');
   }
 }
 
@@ -531,6 +534,7 @@ function R(){
   var lm=document.getElementById('lmi');if(lm)lm.value=inpL;
   if(!fbUp&&fbErr)showErr('Cloud unavailable: '+fbErr+' \u2014 list works locally');
   else if(fbUp&&loadDone&&!fbOK&&fbErr)showErr('Cloud rejected: '+fbErr);
+  else if(fbOK){var eb=document.getElementById('errbar');if(eb&&String(eb.textContent).indexOf('Cloud')===0)eb.remove();}
 }
 
 // ─── ACTIONS ───
@@ -544,12 +548,21 @@ function addS(){
   inp='';photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';sv();R();
 }
 
+var ckTm=null;
+function finishChk(){
+  if(!ckid)return null;
+  var item=null;
+  for(var i=0;i<shop.length;i++){if(shop[i].id===ckid){shop[i].done=true;item=shop[i];break;}}
+  ckid=null;clearTimeout(ckTm);ckTm=null;
+  return item;
+}
 function chkOff(id){
-  if(ckid)return;ckid=id;R();
-  setTimeout(function(){
-    var item=null;
-    for(var i=0;i<shop.length;i++){if(shop[i].id===id){shop[i].done=true;item=shop[i];break;}}
-    ckid=null;sv();R();
+  if(ckid===id)return;
+  if(ckid){finishChk();sv();} // an earlier tick is still animating: complete and save it now so this tap is not lost
+  ckid=id;R();
+  ckTm=setTimeout(function(){
+    var item=finishChk();
+    sv();R();
     if(item)showUndo(item,'c');
   },350);
 }

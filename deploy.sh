@@ -1,5 +1,5 @@
 #!/bin/bash
-REPO=~/Downloads/shopping
+REPO=~/Developer/shopping-list
 DL=~/Downloads
 NEWEST=$(ls -t "$DL"/index*.html 2>/dev/null | head -1)
 if [ -z "$NEWEST" ]; then
