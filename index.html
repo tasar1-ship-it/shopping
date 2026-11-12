@@ -502,8 +502,8 @@ function R(){
   var h='<div class="hd"><div class="ht"><div><div class="ti">'+t.title+'</div><div class="su">'+t.sub+'</div></div><div style="display:flex;gap:6px"><button class="lb" onclick="tgLang()">'+((lang==='en')?'\uD55C\uAD6D\uC5B4':'English')+'</button></div></div>';
   // ID bar
   var hasSR=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
-  var diag='v'+String(APP_V).slice(-4)+' \u00B7 '+(fbUp?(fbOK?'cloud ok':'cloud ERR'):'no SDK')+' \u00B7 '+(hasSR?'mic api':'NO MIC API');
-  h+='<div class="id-bar"><span class="sync-dot '+(fbOK?'sync-on':'sync-off')+'"></span>'+t.myId+': <span class="id-code">'+devId+'</span><span style="margin-left:auto;font-size:10px;opacity:.8">'+diag+'</span>';
+  var diag=BUILD+' \u00B7 '+(fbUp?(fbOK?'cloud ok':'cloud ERR'):'no SDK')+' \u00B7 '+(hasSR?'voice '+vMode:'NO MIC API');
+  h+='<div class="id-bar"><span class="sync-dot '+(fbOK?'sync-on':'sync-off')+'"></span>'+t.myId+': <span class="id-code">'+devId+'</span><span onclick="cycleVMode()" style="margin-left:auto;font-size:10px;opacity:.8;padding:6px 0 6px 10px;cursor:pointer">'+diag+'</span>';
   if(hasTarget)h+='<span style="margin-left:10px">'+t.paired+': <span class="id-code">'+getSendTarget()+'</span></span>';
   h+='</div>';
   h+='<div class="ts">';
@@ -719,34 +719,294 @@ document.addEventListener('click',function(e){
   }
 },true);
 
-// ─── VOICE ───
+// ─── VOICE (rebuilt 12 Nov 2026) ───
+// iPhone Safari's speech recognizer is unreliable when a second session is opened on a page. Because that
+// cannot be reproduced off the phone, there are three ways of driving it, switched by tapping the small
+// grey status text in the ID bar (the choice is remembered on that phone):
+//   A = one recognizer object, reused for every session; one long session until you mute (default)
+//   B = a new recognizer object for every session; one long session until you mute
+//   C = one recognizer object; one short session per item
+// Every tap and every event the phone reports is written to a short log (no words, only event names,
+// word counts and timings) and saved under diag/<device id> in the database, so a failure can be read later.
+var BUILD='b5';
+var V_GAP_MS=300;     // pause between one session ending and the next one starting
+var V_STABLE_MS=800;  // mode C: an item lands this long after the words stop changing
+var vMode='A';
+try{var _vm=localStorage.getItem('sl3_vmode');if(_vm==='A'||_vm==='B'||_vm==='C')vMode=_vm;}catch(e){}
+var vRun=false;       // start() was called and that session has not reported its end
+var vSess=null;       // the current session's state
+var vFail=0,vLastErr='',vEndedAt=0;
+var vLog=[],vLogId=0,vT0=Date.now();
+function vlog(s){if(vLog.length<300)vLog.push((Date.now()-vT0)+' '+s);}
+function vFlush(){
+  if(!fbUp||!vLogId||!vLog.length)return;
+  var ua='';try{ua=String(navigator.userAgent||'').slice(0,160);}catch(e){}
+  try{db.ref('diag/'+devId+'/'+vLogId).set({build:BUILD,mode:vMode,lang:lang,ua:ua,log:vLog});}catch(e){}
+}
+function vMsgListen(){return lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...';}
+function vMsgStart(){return lang==='ko'?'\uB9C8\uC774\uD06C \uC2DC\uC791 \uC911...':'Starting microphone...';}
+
 function tgV(){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showVM(lang==='ko'?'\uC74C\uC131 \uC785\uB825 \uBD88\uAC00 (HTTPS \uD544\uC694)':'Voice needs HTTPS');return}
-  if(listening){
-    listening=false;vmsg=null;
-    // stop(), not abort(): on the iPhone an aborted session left the next one deaf
-    try{if(recog)recog.stop();}catch(ex){}
-    R();return;
-  }
+  if(listening){vOff();return;}
   listening=true;vFail=0;vLastErr='';
-  vmsg=lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...';
-  R();
-  if(recogLive){
-    // The previous session is still closing. Its onend sees listening=true and starts the
-    // new session; starting a second one on top of it is what made the mic go deaf.
-    var waitFor=recog;
-    setTimeout(function(){if(listening&&recogLive&&recog===waitFor){recogLive=false;startVoiceSession();}},1500);
+  vLogId=Date.now();vLog=[];vT0=Date.now();vlog('tap on, mode '+vMode+', build '+BUILD);
+  vmsg=vMsgStart();R();
+  if(vRun){
+    // The previous session is still closing: its end opens the new one. If the phone never reports
+    // the end, stop waiting after 2 seconds and start with a fresh recognizer.
+    var w=vSess;vlog('old session still closing');
+    setTimeout(function(){if(listening&&vRun&&vSess===w){vlog('old session never ended');vDrop();vBegin();}},2000);
+    setTimeout(vFlush,8000);
     return;
   }
-  // Give the phone a moment to release the microphone after the last session ended
+  setTimeout(vFlush,8000); // save the log even if the mic is never muted (a deaf session stays "on")
   var since=Date.now()-vEndedAt;
-  if(since<400){setTimeout(function(){if(listening&&!recogLive)startVoiceSession();},400-since);return;}
-  startVoiceSession();
+  if(since<V_GAP_MS){setTimeout(function(){if(listening&&!vRun)vBegin();},V_GAP_MS-since);return;}
+  vBegin();
 }
-var vEndedAt=0;
-var recogLive=false; // a voice session has been started and has not reported its end yet
-var vFail=0,vLastErr='';
+function vOff(){
+  listening=false;vlog('tap off');
+  if(vSess){clearTimeout(vSess.wd);}
+  // stop(), not abort(): the phone finishes the words it has already heard
+  if(vRun&&recog){try{recog.stop();}catch(ex){}}
+  vmsg=null;R();
+  setTimeout(vFlush,1500); // after the session's last events have come in
+}
+function vGiveUp(){
+  listening=false;vmsg=null;vlog('gave up: '+vLastErr);
+  showVM((lang==='ko'?'\uC74C\uC131 \uC911\uC9C0\uB428':'Voice stopped')+(vLastErr?' ('+vLastErr+')':'')+(lang==='ko'?' \u2014 \uB9C8\uC774\uD06C\uB97C \uB2E4\uC2DC \uB204\uB974\uC138\uC694':' \u2014 tap the mic again'));
+  vFlush();
+}
+function vDrop(){
+  // Forget the current recognizer object completely; the next session gets a new one
+  var o=recog;recog=null;vRun=false;
+  if(o){o.onstart=o.onresult=o.onerror=o.onend=null;try{o.abort();}catch(ex){}}
+}
+function cycleVMode(){
+  if(listening)vOff();
+  vMode=vMode==='A'?'B':(vMode==='B'?'C':'A');
+  try{localStorage.setItem('sl3_vmode',vMode);}catch(e){}
+  vDrop();
+  R();showToast((lang==='ko'?'\uC74C\uC131 \uBAA8\uB4DC ':'Voice mode ')+vMode);
+}
+function vMake(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  var r=new SR();
+  r.interimResults=true;r.maxAlternatives=1;
+  function note(name){r['on'+name]=function(){if(r!==recog)return;if(vSess)vSess.started=true;vlog(name);};}
+  note('audiostart');note('soundstart');note('speechstart');note('speechend');note('soundend');note('audioend');note('nomatch');
+  r.onstart=function(){
+    if(r!==recog)return;
+    vlog('start');if(vSess)vSess.started=true;
+    if(listening){vmsg=aiArmed?(lang==='ko'?'\uC5B4\uB5A4 \uBB3C\uAC74\uC778\uC9C0 \uC124\uBA85\uD574 \uC8FC\uC138\uC694...':'Describe the item...'):vMsgListen();R();}
+  };
+  r.onresult=function(e){
+    if(r!==recog||!vSess)return;
+    vSess.started=true;vSess.got=true;vFail=0;
+    var last=e.results[e.results.length-1];
+    vlog('result '+(last&&last.isFinal?'final':'draft')+' n'+e.results.length);
+    vSess.res(e);
+  };
+  r.onerror=function(e){
+    if(r!==recog)return;
+    vLastErr=(e&&e.error)||'';vlog('error '+vLastErr);
+    if(vLastErr==='not-allowed'||vLastErr==='service-not-allowed'){
+      listening=false;if(vSess)vSess.denied=true;
+      showVM(lang==='ko'?'\uB9C8\uC774\uD06C \uAD8C\uD55C \uD544\uC694':'Mic access needed');
+      return;
+    }
+    if(vLastErr!=='no-speech'&&vLastErr!=='aborted'){showVM('Voice: '+vLastErr);}
+  };
+  r.onend=function(){
+    if(r!==recog)return;
+    vlog('end');vRun=false;vEndedAt=Date.now();
+    var s=vSess;
+    if(s){clearTimeout(s.wd);s.flush();} // words heard but not yet turned into an item are kept
+    var mi=document.getElementById('mi');if(mi&&!inp)mi.value='';
+    if(!listening){
+      if(!(s&&s.denied)){vmsg=null;R();} // keep the "Mic access needed" message on screen
+      vFlush();return;
+    }
+    // A session that dies at once without hearing anything, several times in a row, means the mic is
+    // not really working: say so instead of showing "Listening..." forever.
+    if(s&&!s.got&&(Date.now()-s.at)<1500){vFail++;}else{vFail=0;}
+    if(vFail>=4){vGiveUp();return;}
+    setTimeout(function(){if(listening&&!vRun)vBegin();},V_GAP_MS);
+  };
+  return r;
+}
+function vBegin(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR||!listening||vRun)return;
+  if(vMode==='B'||!recog){vDrop();recog=vMake();}
+  var r=recog;
+  r.lang=lang==='ko'?'ko-KR':'en-US';
+  r.continuous=(vMode!=='C');
+  var s={at:Date.now(),got:false,started:false,denied:false,wd:null,res:null,flush:null};
+  if(vMode==='C'){vShort(s,r);}else{vLong(s,r);}
+  vSess=s;
+  try{r.start();vRun=true;vlog('start() called');}
+  catch(ex){
+    vlog('start() threw '+String((ex&&ex.name)||ex));vLastErr='start failed';
+    vFail++;vDrop();
+    if(vFail>=3){vGiveUp();return;}
+    setTimeout(function(){if(listening&&!vRun)vBegin();},500);
+    return;
+  }
+  // The phone sometimes accepts start() and then reports nothing at all. Do not wait for it forever:
+  // after 4 seconds without any sign of life, try again with a new recognizer object.
+  s.wd=setTimeout(function(){
+    if(vSess!==s||s.started||!listening)return;
+    vlog('no sign of life after start()');vLastErr='no start';
+    vFail++;vDrop();
+    if(vFail>=3){vGiveUp();return;}
+    vBegin();
+  },4000);
+}
+function startVoiceSession(){vBegin();} // name used by the describe helper
+
+// Modes A and B: one long session. iOS delivers one cumulative transcript; this keeps count of the
+// words already turned into items. (Logic unchanged from the build of 18 September 2026.)
+function vLong(s,r){
+  var committedWords=0;    // words of the transcript already turned into items
+  var lastId=null,lastStart=0,lastCount=0,lastText='',lastDraftAt=0;
+  var tm=null,pendingWords=null;
+  var DRAFT_MS=400;        // stability window: item lands this long after you stop talking
+  function fullTranscript(e){
+    var parts=[];
+    for(var i=0;i<e.results.length;i++){var t=e.results[i]&&e.results[i][0]?e.results[i][0].transcript:'';if(t)parts.push(t);}
+    return parts.join(' ').replace(/\s+/g,' ').trim();
+  }
+  function commitTail(words){
+    var tail=words.slice(committedWords).join(' ').trim();
+    if(!tail)return;
+    var id=commitVoice(tail);
+    if(id){lastId=id;lastStart=committedWords;lastCount=words.length-committedWords;lastText=tail;lastDraftAt=Date.now();}
+    committedWords=words.length;
+    var mi=document.getElementById('mi');if(mi)mi.value='';
+  }
+  function reviseLast(words){
+    // The recognizer may re-spell words it already gave us; apply that to the last item in place
+    if(!lastId||lastCount<=0)return;
+    var seg=words.slice(lastStart,lastStart+lastCount).join(' ').trim();
+    if(!seg||seg.toLowerCase()===lastText.toLowerCase())return;
+    var fixed=fixVoice(seg);
+    for(var i=0;i<shop.length;i++){
+      if(shop[i].id===lastId){shop[i].text=fixed;shop[i].category=classify(fixed);break;}
+    }
+    lastText=seg;sv();R();
+  }
+  s.res=function(e){
+    var full=fullTranscript(e);
+    var words=full?full.split(' '):[];
+    if(words.length<committedWords){ // transcript was reset by the engine: start fresh bookkeeping
+      committedWords=0;lastId=null;lastCount=0;lastText='';
+    }
+    reviseLast(words);
+    var last=e.results[e.results.length-1];
+    var isFinal=!!(last&&last.isFinal);
+    var tail=words.slice(committedWords).join(' ');
+    if(isFinal){
+      var hadPending=(tm!==null);
+      clearTimeout(tm);tm=null;
+      if(hadPending&&tail){
+        commitTail(words);                 // you were mid-way into a new item: it is its own item
+      }else if(lastId&&(Date.now()-lastDraftAt)<3000&&words.length>lastStart){
+        // Final re-spelling / re-splitting of the draft you just gave: correct it in place
+        var seg=words.slice(lastStart).join(' ').trim();
+        if(seg&&seg.toLowerCase()!==lastText.toLowerCase()){
+          var fixed=fixVoice(seg);
+          for(var i=0;i<shop.length;i++){if(shop[i].id===lastId){shop[i].text=fixed;shop[i].category=classify(fixed);break;}}
+          lastText=seg;sv();R();
+        }
+        lastCount=words.length-lastStart;committedWords=words.length;
+      }else{
+        commitTail(words);
+      }
+    }else{
+      var mi=document.getElementById('mi');if(mi)mi.value=tail;
+      clearTimeout(tm);
+      pendingWords=words;
+      if(tail){tm=setTimeout(function(){tm=null;commitTail(words);},DRAFT_MS);}
+    }
+  };
+  s.flush=function(){if(tm!==null){clearTimeout(tm);tm=null;if(pendingWords)commitTail(pendingWords);}};
+}
+
+// Mode C: one short session per item. The words become an item when the phone marks them final or
+// when they have stopped changing; the session is then closed and its end opens the next one.
+function vShort(s,r){
+  var tm=null,draft='',done=false,text='',id=null;
+  function commit(andStop){
+    if(done||!draft)return;
+    done=true;text=draft;
+    id=commitVoice(draft);
+    var mi=document.getElementById('mi');if(mi)mi.value='';
+    if(andStop){try{r.stop();}catch(ex){}}
+  }
+  s.res=function(e){
+    var parts=[];
+    for(var i=0;i<e.results.length;i++){var t=e.results[i]&&e.results[i][0]?e.results[i][0].transcript:'';if(t)parts.push(t);}
+    var tx=parts.join(' ').replace(/\s+/g,' ').trim();
+    if(!tx)return;
+    var last=e.results[e.results.length-1];
+    var fin=!!(last&&last.isFinal);
+    if(done){
+      // Already added. A later version from the phone either re-spells the item (correct it in place)
+      // or carries further words spoken before the session closed (they become their own item).
+      var a=tx.toLowerCase(),b=text.toLowerCase();
+      if(a===b)return;
+      if(a.indexOf(b+' ')===0){
+        if(!fin)return;
+        var more=tx.slice(text.length).trim();
+        text=tx;if(more)commitVoice(more);
+        return;
+      }
+      if(id){
+        var fixed=fixVoice(tx);
+        for(var k=0;k<shop.length;k++){if(shop[k].id===id&&!shop[k].done){shop[k].text=fixed;shop[k].category=classify(fixed);break;}}
+        text=tx;sv();R();
+      }
+      return;
+    }
+    draft=tx;
+    var mi=document.getElementById('mi');if(mi)mi.value=tx;
+    clearTimeout(tm);tm=null;
+    if(fin){commit(true);}
+    else{tm=setTimeout(function(){tm=null;commit(true);},V_STABLE_MS);}
+  };
+  s.flush=function(){if(tm!==null){clearTimeout(tm);tm=null;commit(false);}};
+}
+// iPhone Safari kills the microphone when the page goes to the background: show it as off
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible'&&listening){vlog('page hidden');vOff();}
+});
+
+// ─── NEW VERSION CHECK ───
+// The page can sit in the phone's cache for a while after an update. Ask the server (uncached) which
+// build is current; if it is not this one, offer a one-tap update.
+function checkBuild(){
+  try{
+    var x=new XMLHttpRequest();
+    x.open('GET','version.json?t='+Date.now(),true);
+    x.onload=function(){
+      try{var j=JSON.parse(x.responseText);if(j&&j.build&&j.build!==BUILD)showUpdate(String(j.build));}catch(e){}
+    };
+    x.send();
+  }catch(e){}
+}
+function showUpdate(b){
+  if(document.getElementById('updbar'))return;
+  var d=document.createElement('div');d.id='updbar';
+  d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:2500;background:#007AFF;color:#fff;font:600 14px -apple-system,sans-serif;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));text-align:center;cursor:pointer';
+  d.textContent=lang==='ko'?'\uC0C8 \uBC84\uC804 \u2014 \uC5EC\uAE30\uB97C \uB20C\uB7EC \uC5C5\uB370\uC774\uD2B8':'New version available \u2014 tap here to update';
+  d.onclick=function(){try{location.replace(location.pathname+'?b='+encodeURIComponent(b));}catch(e){}};
+  document.body.appendChild(d);
+}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')checkBuild();});
+
 
 var VFIX={'breath':'bread','bred':'bread','brad':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
 var VFIXP=[['but her','butter'],['all live','olive'],['all lives','olives'],['orange use','orange juice'],['apple use','apple juice'],['to mate oh','tomato'],['dish washer','dishwasher'],['tooth paste','toothpaste']];
@@ -812,113 +1072,6 @@ function resolveAI(desc){
 }
 var _lastVoiceText='',_lastVoiceAt=0;
 
-function startVoiceSession(){
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR||!listening)return;
-  var r=new SR();
-  recog=r;
-  r.lang=lang==='ko'?'ko-KR':'en-US';
-  r.continuous=true;       // mic stays open: no restart gap between items
-  r.interimResults=true;   // drafts drive fast commits; finals correct them in place
-  r.maxAlternatives=1;
-  // Per-session transcript bookkeeping (iOS delivers one cumulative transcript)
-  var committedWords=0;    // words of the transcript already turned into items
-  var lastId=null,lastStart=0,lastCount=0,lastText='',lastDraftAt=0;
-  var tm=null,pendingWords=null;
-  var startedAt=Date.now(),gotResult=false,denied=false;
-  var DRAFT_MS=400;        // stability window: item lands this long after you stop talking
-
-  function fullTranscript(e){
-    var parts=[];
-    for(var i=0;i<e.results.length;i++){var t=e.results[i]&&e.results[i][0]?e.results[i][0].transcript:'';if(t)parts.push(t);}
-    return parts.join(' ').replace(/\s+/g,' ').trim();
-  }
-  function commitTail(words){
-    var tail=words.slice(committedWords).join(' ').trim();
-    if(!tail)return;
-    var id=commitVoice(tail);
-    if(id){lastId=id;lastStart=committedWords;lastCount=words.length-committedWords;lastText=tail;lastDraftAt=Date.now();}
-    committedWords=words.length;
-    var mi=document.getElementById('mi');if(mi)mi.value='';
-  }
-  function reviseLast(words){
-    // The recognizer may re-spell words it already gave us; apply that to the last item in place
-    if(!lastId||lastCount<=0)return;
-    var seg=words.slice(lastStart,lastStart+lastCount).join(' ').trim();
-    if(!seg||seg.toLowerCase()===lastText.toLowerCase())return;
-    var fixed=fixVoice(seg);
-    for(var i=0;i<shop.length;i++){
-      if(shop[i].id===lastId){shop[i].text=fixed;shop[i].category=classify(fixed);break;}
-    }
-    lastText=seg;sv();R();
-  }
-  r.onresult=function(e){
-    gotResult=true;vFail=0;
-    var full=fullTranscript(e);
-    var words=full?full.split(' '):[];
-    if(words.length<committedWords){ // transcript was reset by the engine: start fresh bookkeeping
-      committedWords=0;lastId=null;lastCount=0;lastText='';
-    }
-    reviseLast(words);
-    var last=e.results[e.results.length-1];
-    var isFinal=!!(last&&last.isFinal);
-    var tail=words.slice(committedWords).join(' ');
-    if(isFinal){
-      var hadPending=(tm!==null);
-      clearTimeout(tm);tm=null;
-      if(hadPending&&tail){
-        commitTail(words);                 // you were mid-way into a new item: it is its own item
-      }else if(lastId&&(Date.now()-lastDraftAt)<3000&&words.length>lastStart){
-        // Final re-spelling / re-splitting of the draft you just gave: correct it in place
-        var seg=words.slice(lastStart).join(' ').trim();
-        if(seg&&seg.toLowerCase()!==lastText.toLowerCase()){
-          var fixed=fixVoice(seg);
-          for(var i=0;i<shop.length;i++){if(shop[i].id===lastId){shop[i].text=fixed;shop[i].category=classify(fixed);break;}}
-          lastText=seg;sv();R();
-        }
-        lastCount=words.length-lastStart;committedWords=words.length;
-      }else{
-        commitTail(words);
-      }
-    }else{
-      var mi=document.getElementById('mi');if(mi)mi.value=tail;
-      clearTimeout(tm);
-      pendingWords=words;
-      if(tail){tm=setTimeout(function(){tm=null;commitTail(words);},DRAFT_MS);}
-    }
-  };
-  r.onerror=function(e){
-    vLastErr=e.error||'';
-    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
-      listening=false;vmsg=null;denied=true;
-      showVM(lang==='ko'?'\uB9C8\uC774\uD06C \uAD8C\uD55C \uD544\uC694':'Mic access needed');
-      return;
-    }
-    if(e.error!=='no-speech'&&e.error!=='aborted'){showVM('Voice: '+e.error);}
-  };
-  r.onend=function(){
-    if(recog!==r)return;
-    recogLive=false;vEndedAt=Date.now();
-    // Words heard but not yet turned into an item when the mic closed: keep them
-    if(tm!==null){clearTimeout(tm);tm=null;if(pendingWords)commitTail(pendingWords);}
-    var mi=document.getElementById('mi');if(mi)mi.value='';
-    if(listening){
-      // A session that dies at once without hearing anything, several times in a row, means the
-      // mic is not really working: say so instead of showing "Listening..." forever.
-      if(!gotResult&&(Date.now()-startedAt)<1500){vFail++;}else{vFail=0;}
-      if(vFail>=4){
-        listening=false;vmsg=null;
-        showVM((lang==='ko'?'\uC74C\uC131 \uC911\uC9C0\uB428':'Voice stopped')+(vLastErr?' ('+vLastErr+')':'')+(lang==='ko'?' \u2014 \uB9C8\uC774\uD06C\uB97C \uB2E4\uC2DC \uB204\uB974\uC138\uC694':' \u2014 tap the mic again'));
-        return;
-      }
-      setTimeout(function(){if(listening&&recog===r)startVoiceSession();},250);
-    }
-    else if(!denied){vmsg=null;R();} // keep the "Mic access needed" message on screen
-  };
-  try{r.start();recogLive=true;}
-  catch(ex){recogLive=false;listening=false;vmsg=null;showVM(lang==='ko'?'\uC74C\uC131 \uC624\uB958':'Voice error');}
-}
-
 function commitVoice(tx){
   if(aiArmed){aiArmed=false;vmsg=listening?(lang==='ko'?'\uB4E3\uACE0 \uC788\uC2B5\uB2C8\uB2E4...':'Listening...'):null;resolveAI(tx);return null;}
   tx=fixVoice(tx);
@@ -973,6 +1126,7 @@ function showUndo(item,type){
 ld();
 listenInbox();
 R();
+checkBuild();
 
 </script>
 </body>
