@@ -35,6 +35,7 @@ input::placeholder{color:var(--muted)}
 .ir input[type=text]{flex:1;min-width:0;padding:10px 13px;border-radius:12px;border:1.5px solid var(--fill);font-size:16px;outline:none;background:var(--card);color:var(--text);font-family:inherit}
 .ib{width:40px;height:40px;border-radius:11px;border:1.5px solid var(--fill);background:var(--card);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .ib.ma{background:var(--accent);color:var(--on-accent);border-color:var(--accent);animation:pu 1.2s ease infinite}
+.ib.pa{border-color:var(--accent);background:var(--fill)}
 .ab{padding:11px 14px;border-radius:12px;border:none;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
 .vt{margin-top:6px;padding:7px 12px;border-radius:9px;background:var(--fill);color:var(--accent);font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px}
 .vd{width:7px;height:7px;border-radius:50%;background:var(--danger);animation:bl 1s ease infinite;flex-shrink:0}
@@ -130,7 +131,7 @@ input::placeholder{color:var(--muted)}
 // One file, plain old-style JavaScript (var and function only) so it runs on any iPhone.
 // The list lives on the phone (localStorage); the online database holds a backup of it and
 // carries lists sent from one phone to the other.
-var BUILD='n2';
+var BUILD='n3';
 
 // ---- Errors are shown, never swallowed silently ----
 window.onerror=function(msg,src,line){try{showErr('Error: '+msg+' (line '+line+')');}catch(e){}};
@@ -676,18 +677,27 @@ function showPh(id,ev){
 }
 
 // ---- Voice ----
-// What the phone's own log showed on 12 November 2026 (Safari 27.2): a microphone session opened about
-// 2 seconds after the previous one ended reports "started" within 40 ms and then hears nothing; sessions
-// opened 10 and 34 seconds after the previous one work, and report "started" after 200 ms or more.
-// So: (1) a new session is never opened sooner than V_MIN_GAP after the last one ended - the app shows a
-// short countdown instead; (2) a session that reports "started" suspiciously fast is dropped once and
-// re-opened after a longer pause; (3) every tap and event (no words) is logged to diag/<phone ID>.
+// What the phone's own logs showed on 12 November 2026 (Safari 27.2), over 14 microphone sessions:
+//  - The first session on a page always works. It reports "started" 200 ms or more after start().
+//  - A session opened after an earlier one has ended is often deaf: it reports "started" within 40 ms and
+//    then hears nothing. This happened 2, 2.4, 6.9, 10 and 15 seconds after the earlier session ended, while
+//    6, 10 and 34 seconds worked - so no waiting time makes re-opening safe.
+// Therefore:
+//  (1) Tapping the microphone while it listens does not close the session. It PAUSES: the session stays
+//      open, what it hears is ignored, and a tap continues at once with nothing to re-open. The pause is
+//      shown on screen, ends by itself after V_PAUSE_MS, and can be ended at once by tapping the message.
+//  (2) When a session really has to be re-opened, a "started" report faster than V_FAST_START is treated as
+//      the deaf case: the app says so, waits, and tries again with a new recognizer - it never shows
+//      "Listening..." for a session it has reason to believe is deaf.
+//  (3) Every tap and event (no words) is logged to diag/<phone ID>, so the next change rests on evidence.
 var V_MIN_GAP=6000;       // shortest pause between the end of one session and the start of the next
-var V_FAST_START=100;     // a "started" report sooner than this (not on the first session) is suspect
-var V_SUSPECT_WAIT=10000; // pause before re-opening after a suspect start
+var V_FAST_START=120;     // a "started" report sooner than this (not on the page's first session) = deaf
+var V_RETRY_WAITS=[20000,30000]; // pauses before trying again after a deaf start
+var V_PAUSE_MS=60000;     // how long a paused session is kept open
 var listening=false,recog=null,vmsg='';
+var vPaused=false,vPauseTm=null;
 var vRun=false;           // start() was called and that session has not reported its end
-var vSess=null,vSessions=0,vFail=0,vRetry=0,vLastErr='',vNotBefore=0,vTimer=null,vtm=null;
+var vSess=null,vSessions=0,vFail=0,vRetry=0,vHeld=false,vInTap=false,vLastErr='',vNotBefore=0,vEndedAt=0,vTimer=null,vtm=null;
 var vLog=[],vLogId=0,vT0=Date.now();
 function vlog(s){if(vLog.length<300)vLog.push((Date.now()-vT0)+' '+s);}
 function vFlush(){
@@ -695,23 +705,43 @@ function vFlush(){
   var ua='';try{ua=String(navigator.userAgent||'').slice(0,160);}catch(e){}
   try{db.ref('diag/'+devId+'/'+vLogId).set({build:BUILD,ua:ua,log:vLog});}catch(e){}
 }
+function vBtn(){var b=document.getElementById('micBtn');if(b)b.className='ib'+(listening?' ma':(vPaused?' pa':''));}
 function vShow(msg,dot){
   vmsg=msg||'';
   setHTML('vs',msg?'<div class="vt">'+(dot?'<span class="vd"></span>':'')+esc(msg)+'</div>':'');
-  var b=document.getElementById('micBtn');if(b)b.className='ib'+(listening?' ma':'');
+  vBtn();
 }
 function showVM(m){vShow(m,false);clearTimeout(vtm);vtm=setTimeout(function(){if(vmsg===m)vShow('',false);},4000);}
 function tgV(){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showVM('Voice input is not available in this browser');return;}
-  if(listening){vOff();return;}
-  listening=true;vFail=0;vRetry=0;vLastErr='';
+  if(listening){vPause();return;}
+  if(vPaused){vResume();return;}
+  listening=true;vFail=0;vRetry=0;vHeld=false;vLastErr='';
   vLogId=Date.now();vLog=[];vT0=Date.now();vlog('tap on, build '+BUILD);
   setTimeout(vFlush,8000); // save the log even if the microphone is never switched off
-  vArm();
+  vInTap=true;vArm();vInTap=false;
+}
+function vPause(){
+  // Nothing worth keeping open (still starting or counting down): switch off properly
+  if(!(vRun&&recog&&vSess&&vSess.alive)){vOff();return;}
+  listening=false;vPaused=true;vlog('pause');
+  if(vSess.flush)vSess.flush(); // words already heard become their item
+  clearTimeout(vPauseTm);
+  vPauseTm=setTimeout(function(){if(vPaused){vlog('pause ran out');vOff();}},V_PAUSE_MS);
+  vmsg='Paused';
+  setHTML('vs','<div class="vt" onclick="vOff()">Paused - tap the microphone to continue. It stays connected for '+Math.round(V_PAUSE_MS/1000)+' s; tap here to switch it off now.</div>');
+  vBtn();
+  setTimeout(vFlush,1500);
+}
+function vResume(){
+  clearTimeout(vPauseTm);vPauseTm=null;vPaused=false;
+  if(!(vRun&&recog)){tgV();return;} // the session is gone after all: open one the normal way
+  listening=true;vlog('resume');
+  vShow('Listening...',true);
 }
 function vOff(){
-  listening=false;vlog('tap off');
+  listening=false;vPaused=false;clearTimeout(vPauseTm);vPauseTm=null;vlog('off');
   clearTimeout(vTimer);vTimer=null;
   if(vSess)clearTimeout(vSess.wd);
   // stop(), not abort(): the phone finishes the words it has already heard
@@ -720,7 +750,7 @@ function vOff(){
   setTimeout(vFlush,1500);
 }
 function vArm(){
-  // Open a session now, or count down to the moment it is safe to open one
+  // Open a session now, or count down to the moment one may be opened
   clearTimeout(vTimer);vTimer=null;
   if(!listening)return;
   if(vRun){
@@ -734,7 +764,8 @@ function vArm(){
   }
   var wait=vNotBefore-Date.now();
   if(wait>0){
-    vShow('Microphone ready in '+Math.ceil(wait/1000)+' s',false);
+    var secs=Math.ceil(wait/1000);
+    vShow(vHeld?('The iPhone is still holding the microphone - trying again in '+secs+' s'):('Microphone ready in '+secs+' s'),false);
     vTimer=setTimeout(vArm,wait>1000?1000:wait);
     return;
   }
@@ -742,13 +773,14 @@ function vArm(){
   vBegin();
 }
 function vGiveUp(){
-  listening=false;vlog('gave up: '+vLastErr);
-  showVM('Voice stopped'+(vLastErr?' ('+vLastErr+')':'')+' - tap the microphone again');
+  listening=false;vPaused=false;vlog('gave up: '+vLastErr);
+  // stays on screen until the next tap
+  vShow('Voice stopped'+(vLastErr?' ('+vLastErr+')':'')+'. Try the microphone again in a minute, or use the microphone key on the keyboard.',false);
   vFlush();
 }
 function vDrop(){
   // Forget the recognizer completely; the next session gets a new one
-  var o=recog;recog=null;vRun=false;
+  var o=recog;recog=null;vRun=false;vEndedAt=Date.now();
   if(o){o.onstart=o.onresult=o.onerror=o.onend=null;try{o.abort();}catch(ex){}}
 }
 function vMake(){
@@ -761,16 +793,24 @@ function vMake(){
     if(r!==recog||!vSess)return;
     var s=vSess,lat=Date.now()-s.at;
     s.alive=true;vlog('start +'+lat);
-    if(vSessions>1&&lat<V_FAST_START&&vRetry<1){
-      vRetry++;vlog('suspiciously fast start: dropping it, re-opening after a pause');
-      clearTimeout(s.wd);vDrop();vNotBefore=Date.now()+V_SUSPECT_WAIT;vArm();
+    if(vSessions>1&&lat<V_FAST_START){
+      // the deaf case: never show "Listening..." for it
+      vlog('deaf start (too fast), attempt '+(vRetry+1));
+      clearTimeout(s.wd);vDrop();
+      if(!listening){vPaused=false;clearTimeout(vPauseTm);vPauseTm=null;vShow('',false);return;}
+      if(vRetry>=V_RETRY_WAITS.length){vLastErr='the iPhone is not releasing the microphone';vGiveUp();return;}
+      vHeld=true;vNotBefore=Date.now()+V_RETRY_WAITS[vRetry];vRetry++;
+      vArm();
       return;
     }
+    vHeld=false;
     if(listening)vShow('Listening...',true);
   };
   r.onresult=function(e){
     if(r!==recog||!vSess)return;
-    vSess.alive=true;vSess.got=true;vFail=0;vRetry=0;
+    vSess.alive=true;
+    if(vPaused){vSess.skip(e);return;} // paused: what is heard now is ignored for good
+    vSess.got=true;vFail=0;vRetry=0;
     var last=e.results[e.results.length-1];
     vlog('result '+(last&&last.isFinal?'final':'draft')+' n'+e.results.length);
     vSess.res(e);
@@ -779,18 +819,19 @@ function vMake(){
     if(r!==recog)return;
     vLastErr=(e&&e.error)||'';vlog('error '+vLastErr);
     if(vLastErr==='not-allowed'||vLastErr==='service-not-allowed'){
-      listening=false;if(vSess)vSess.denied=true;
+      listening=false;vPaused=false;clearTimeout(vPauseTm);vPauseTm=null;if(vSess)vSess.denied=true;
       showVM('The microphone is not allowed for this page');
     }
   };
   r.onend=function(){
     if(r!==recog)return;
-    vlog('end');vRun=false;vNotBefore=Date.now()+V_MIN_GAP;
+    vlog('end');vRun=false;vEndedAt=Date.now();vNotBefore=vEndedAt+V_MIN_GAP;
+    if(vPaused){vPaused=false;clearTimeout(vPauseTm);vPauseTm=null;vlog('ended while paused');}
     var s=vSess;
     if(s){clearTimeout(s.wd);s.flush();} // words heard but not yet turned into an item are kept
     if(!listening){
       if(!(s&&s.denied))vShow('',false); // keep the "not allowed" message on screen
-      else{var b=document.getElementById('micBtn');if(b)b.className='ib';}
+      else{vBtn();}
       vFlush();return;
     }
     // A session that dies at once without hearing anything, several times in a row, means the
@@ -806,10 +847,13 @@ function vBegin(){
   if(!SR||!listening||vRun)return;
   if(!recog)recog=vMake();
   var r=recog;
-  var s={at:Date.now(),got:false,alive:false,denied:false,wd:null,res:null,flush:null};
+  var s={at:Date.now(),got:false,alive:false,denied:false,wd:null,res:null,flush:null,skip:null};
   vWords(s);
   vSess=s;vSessions++;
-  try{r.start();vRun=true;vlog('start() called, session '+vSessions);}
+  try{
+    r.start();vRun=true;
+    vlog('start() called, session '+vSessions+', '+(vEndedAt?(Math.round((Date.now()-vEndedAt)/100)/10)+' s after the last one ended':'first on this page')+', from a '+(vInTap?'tap':'timer'));
+  }
   catch(ex){
     vlog('start() threw '+String((ex&&ex.name)||ex));vLastErr='could not start';
     vFail++;vDrop();vNotBefore=Date.now()+V_MIN_GAP;
@@ -844,7 +888,7 @@ function vWords(s){
   function box(v){var mi=document.getElementById('mi');if(mi)mi.value=v;}
   function retext(id,seg){
     var it=id?find(id):null;
-    if(!it||it.done)return;
+    if(!it||it.done||!seg)return;
     var fixed=fixVoice(seg);
     if(it.text===fixed)return;
     it.text=fixed;if(it.category!=='Lukas')it.category=classify(fixed);
@@ -855,35 +899,36 @@ function vWords(s){
     var en=ent[i],tail=words.slice(en.n).join(' ');
     if(!tail)return;
     var id=commitVoice(tail);
-    en.items.push({id:id,count:words.length-en.n,text:tail});
+    en.items.push({id:id,from:en.n,count:words.length-en.n,text:tail}); // the item is words [from, from+count) of its entry
     en.n=words.length;
     box('');
   }
   function finalize(i,words){
-    var en=ent[i],k,total=0;
+    var en=ent[i],k;
     if(!words.length)return;
-    if(en.items.length===0){commit(i,words);return;}
-    if(en.items.length===1){
-      // the whole entry became one item, perhaps from an early draft: the final wording replaces it
-      var one=en.items[0],fin=words.join(' ');
-      if(!one.id&&fin.toLowerCase()!==String(one.text).toLowerCase()){
+    // items made before a pause are settled; only the ones made since may still be corrected
+    var live=en.items.slice(en.frozen||0);
+    if(live.length===0){commit(i,words);return;} // (words passed over during a pause stay passed over)
+    var lastIt=live[live.length-1],end=lastIt.from+lastIt.count;
+    if(live.length===1){
+      // one item came from this stretch, perhaps from an early draft: the final wording replaces it
+      var fin=words.slice(lastIt.from).join(' ');
+      if(!fin)return;
+      if(!lastIt.id&&fin.toLowerCase()!==String(lastIt.text).toLowerCase()){
         // the draft was skipped as a repeat of the item before it, but the final wording says more
-        one.id=commitVoice(fin);one.text=fin;
+        lastIt.id=commitVoice(fin);lastIt.text=fin;
       }
-      retext(one.id,fin);
-      en.items[0].count=words.length;en.n=words.length;
+      retext(lastIt.id,fin);
+      lastIt.count=words.length-lastIt.from;en.n=words.length;
       return;
     }
-    // you paused inside the entry, so it became several items
-    for(k=0;k<en.items.length;k++)total+=en.items[k].count;
-    if(words.length===total){
-      var at=0;
-      for(k=0;k<en.items.length;k++){retext(en.items[k].id,words.slice(at,at+en.items[k].count).join(' '));at+=en.items[k].count;}
-    }else if(words.length>total){
+    // you paused in speaking, so this stretch became several items
+    if(words.length===end){
+      for(k=0;k<live.length;k++){retext(live[k].id,words.slice(live[k].from,live[k].from+live[k].count).join(' '));}
+    }else if(words.length>end){
       // more words than the drafts had: they finish the last item
-      var lastIt=en.items[en.items.length-1],from=total-lastIt.count;
-      retext(lastIt.id,words.slice(from).join(' '));
-      lastIt.count=words.length-from;en.n=words.length;
+      retext(lastIt.id,words.slice(lastIt.from).join(' '));
+      lastIt.count=words.length-lastIt.from;en.n=words.length;
     }
     // fewer words than were already turned into items: leave the items as they are
   }
@@ -914,6 +959,24 @@ function vWords(s){
     }
   };
   s.flush=function(){if(tm!==null){clearTimeout(tm);tm=null;}var p=pend;pend=null;if(p)commit(p.i,p.words);};
+  s.skip=function(e){
+    // heard while paused: finished entries are closed, and the words so far of an open entry are passed over
+    for(var i=0;i<e.results.length;i++){
+      if(!ent[i])ent[i]={n:0,items:[],closed:false};
+      var r=e.results[i];
+      var en=ent[i];
+      if(en.closed)continue;
+      var words=wordsOf(r);
+      if(r&&r.isFinal){
+        // a final wording with no new words only corrects what was said before the pause
+        if(!en.passed&&words.length===en.n)finalize(i,words);
+        en.closed=true;
+      }else{
+        if(words.length>en.n){en.n=words.length;en.passed=true;}
+        en.frozen=en.items.length; // what was made before the pause is settled from here on
+      }
+    }
+  };
 }
 // Words the phone often mishears for groceries
 var VFIX={'breath':'bread','bred':'bread','brad':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
@@ -939,7 +1002,7 @@ function commitVoice(tx){
 }
 // iPhone Safari kills the microphone when the page goes to the background: show it as off
 document.addEventListener('visibilitychange',function(){
-  if(document.visibilityState!=='visible'&&listening){vlog('page hidden');vOff();}
+  if(document.visibilityState!=='visible'&&(listening||vPaused)){vlog('page hidden');vOff();}
 });
 
 // ---- Is there a newer version? ----
