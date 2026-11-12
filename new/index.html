@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Shopping List</title>
+<link rel="apple-touch-icon" href="../icon.svg">
+<style>
+:root{--bg:#F2F2F7;--card:#FFFFFF;--fill:#E5E5EA;--line:#C6C6C8;--text:#000000;--text2:#1C1C1E;--muted:#6D6D72;--faint:#AEAEB2;--ring:#C7C7CC;--accent:#007AFF;--on-accent:#FFFFFF;--danger:#FF3B30;--overlay:rgba(0,0,0,.85);--shadow:rgba(0,122,255,.35)}
+@media (prefers-color-scheme: dark){
+:root{--bg:#000000;--card:#1C1C1E;--fill:#2C2C2E;--line:#38383A;--text:#FFFFFF;--text2:#F2F2F7;--muted:#98989F;--faint:#636366;--ring:#48484A;--accent:#0A84FF;--on-accent:#FFFFFF;--danger:#FF453A;--overlay:rgba(0,0,0,.92);--shadow:rgba(10,132,255,.35)}
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+body{max-width:480px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,20px)}
+button{font-family:inherit}
+input::placeholder{color:var(--muted)}
+@keyframes co{0%{opacity:1;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}100%{opacity:.3;transform:scale(.97)}}
+@keyframes pu{0%{box-shadow:0 0 0 0 var(--shadow)}70%{box-shadow:0 0 0 10px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+.hd{background:var(--bg);padding:48px 20px 0;border-radius:0 0 24px 24px;border-bottom:.5px solid var(--line)}
+.ht{margin-bottom:14px}
+.ti{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.1}
+.su{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.04em}
+.ts{display:flex;margin-top:4px}
+.tb{flex:1;background:none;border:none;color:var(--muted);padding:10px 0;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:5px}
+.tb.a{color:var(--accent);border-bottom-color:var(--accent)}
+.bg{background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+.bm{background:var(--fill);color:var(--muted);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+.ia{padding:14px 16px 4px}
+.ir{display:flex;gap:5px;align-items:center}
+.ir input[type=text]{flex:1;min-width:0;padding:10px 13px;border-radius:12px;border:1.5px solid var(--fill);font-size:16px;outline:none;background:var(--card);color:var(--text);font-family:inherit}
+.ib{width:40px;height:40px;border-radius:11px;border:1.5px solid var(--fill);background:var(--card);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.ib.ma{background:var(--accent);color:var(--on-accent);border-color:var(--accent);animation:pu 1.2s ease infinite}
+.ab{padding:11px 14px;border-radius:12px;border:none;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.vt{margin-top:6px;padding:7px 12px;border-radius:9px;background:var(--fill);color:var(--accent);font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px}
+.vd{width:7px;height:7px;border-radius:50%;background:var(--danger);animation:bl 1s ease infinite;flex-shrink:0}
+.pp{margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.pp img{width:44px;height:44px;border-radius:9px;object-fit:cover;border:2px solid var(--fill)}
+.pp button{background:var(--fill);border:none;border-radius:7px;width:26px;height:26px;font-size:13px;cursor:pointer;color:var(--muted)}
+.la{padding:4px 16px 8px}
+.sbar{padding:8px 0 4px;display:flex;gap:6px}
+.sndb{display:flex;align-items:center;justify-content:center;flex:1;padding:10px 0;border-radius:11px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer}
+.stb{background:var(--accent);border:none;color:var(--on-accent);padding:9px 14px;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center}
+.cg{margin-top:14px}
+.ch{display:flex;align-items:center;gap:7px;margin-bottom:5px;padding-left:3px}
+.cd{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.cn{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;flex:1}
+.cc{font-size:11px;color:var(--faint);font-weight:500}
+.it{display:flex;align-items:center;gap:9px;padding:10px 11px;background:var(--card);border-radius:12px;margin-bottom:4px;cursor:pointer;min-height:44px}
+.it.cki{animation:co .35s ease forwards}
+.it.cpl{opacity:.8}
+.ci{width:20px;height:20px;border-radius:50%;border:2px solid var(--ring);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ci.on{background:var(--accent);border-color:var(--accent)}
+.tx{flex:1;font-size:15px;color:var(--text2);line-height:1.3;word-break:break-word}
+.tx.off{color:var(--muted);text-decoration:line-through}
+.qg{background:var(--fill);color:var(--accent);font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;flex-shrink:0}
+.db{width:34px;height:34px;border-radius:7px;border:none;background:transparent;color:var(--faint);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.th{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1.5px solid var(--fill);flex-shrink:0}
+.rb{padding:6px 0 4px;display:flex;gap:6px}
+.rbtn{display:flex;align-items:center;justify-content:center;flex:1;padding:9px 0;border-radius:11px;border:1.5px solid var(--accent);background:var(--fill);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;gap:5px}
+.rbtn.dng{border-color:var(--danger);color:var(--danger);background:transparent}
+.clrw{text-align:center;padding:14px 0 4px}
+.clr{background:none;border:none;color:var(--faint);font-size:11px;font-weight:500;letter-spacing:.04em;cursor:pointer;padding:8px 16px}
+.lk{margin-top:18px;padding:16px 0 24px;border-top:1px solid var(--fill)}
+.em{padding:48px 0;color:var(--muted);font-size:13px;text-align:center}
+.hint{font-size:11px;color:var(--faint);text-align:center;padding:10px 0 0}
+.toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;box-shadow:0 4px 20px var(--shadow);max-width:90vw;display:flex;align-items:center;gap:12px}
+.toast span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast button{background:#fff;color:#0062CC;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;cursor:pointer}
+.overlay img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
+.sheet{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:1000;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet-hd{padding:48px 20px 12px;display:flex;justify-content:space-between;align-items:center}
+.sheet-ti{font-size:24px;font-weight:700;color:var(--text)}
+.sheet-x{width:36px;height:36px;border-radius:50%;background:var(--card);border:none;color:var(--accent);font-size:20px;cursor:pointer}
+.sheet-body{padding:0 20px 40px}
+.card{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.card-n{font-size:14px;font-weight:600;color:var(--accent);margin:0 0 8px}
+.card-p{font-size:13px;color:var(--text2);margin:0 0 10px;line-height:1.5}
+.bigid{text-align:center;padding:12px 0;font-family:ui-monospace,Menlo,monospace;font-size:24px;font-weight:700;color:var(--accent);letter-spacing:.15em}
+.idin{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--fill);background:var(--bg);color:var(--text);font-size:18px;font-family:ui-monospace,Menlo,monospace;text-align:center;letter-spacing:.15em;text-transform:uppercase;outline:none;margin-bottom:12px}
+.id-bar{margin:8px 0 4px;padding:8px 12px;background:var(--card);border-radius:10px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.id-code{font-family:ui-monospace,Menlo,monospace;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.1em}
+.diag{margin-left:auto;font-size:10px;opacity:.8}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--danger)}
+.sync-dot.on{background:var(--accent)}
+.bar{position:fixed;left:0;right:0;z-index:2500;color:#fff;text-align:center}
+#errbar{top:0;background:#B00020;font-size:12px;padding:8px 12px;word-break:break-word}
+#updbar{bottom:0;background:var(--accent);font-size:14px;font-weight:600;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));cursor:pointer}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="ht"><div class="ti">Shopping List</div><div class="su">Curated with care</div></div>
+  <div class="id-bar" id="idbar"></div>
+  <div class="ts" id="tabs"></div>
+</div>
+<div class="ia" id="addArea">
+  <div class="ir">
+    <input type="text" id="mi" placeholder="Add an item..." autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter'){addS();}">
+    <button class="ib" id="camBtn" onclick="pPh()" aria-label="Add a photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+    <button class="ib" id="micBtn" onclick="tgV()" aria-label="Voice input"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+    <button class="ab" onclick="addS()">Add</button>
+  </div>
+  <div id="vs"></div>
+  <div id="pp"></div>
+</div>
+<div class="la" id="list"></div>
+<div class="la" id="lukasWrap">
+  <div class="lk">
+    <div class="ch"><span class="cd"></span><span class="cn">Lukas</span><span class="cc" id="lkCount">0</span></div>
+    <div id="lkItems"></div>
+    <div class="ir" style="margin-top:6px">
+      <input type="text" id="lmi" placeholder="Add for Lukas..." autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter'){addLukas();}">
+      <button class="ab" onclick="addLukas()">Add</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="phIn" accept="image/*" capture="environment" style="display:none" onchange="phPicked(this)">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+
+// Shopping List - rebuilt from scratch, 12 November 2026.
+// One file, plain old-style JavaScript (var and function only) so it runs on any iPhone.
+// The list lives on the phone (localStorage); the online database holds a backup of it and
+// carries lists sent from one phone to the other.
+var BUILD='n1';
+
+// ---- Errors are shown, never swallowed silently ----
+window.onerror=function(msg,src,line){try{showErr('Error: '+msg+' (line '+line+')');}catch(e){}};
+function showErr(msg){
+  var b=document.getElementById('errbar');
+  if(!b){b=document.createElement('div');b.id='errbar';b.className='bar';document.body.appendChild(b);}
+  b.textContent=msg;
+}
+function gone(el){try{if(el&&el.parentNode)el.parentNode.removeChild(el);}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ---- Online database ----
+var fbUp=false,db=null,online=false;
+try{
+  if(typeof firebase==='undefined')throw new Error('database library not loaded');
+  firebase.initializeApp({
+    apiKey:"AIzaSyCgJ-D58BSrqCi3eUOoQ3TzbvO6lzv-OUY",
+    authDomain:"shopping-list-app-2bc50.firebaseapp.com",
+    databaseURL:"https://shopping-list-app-2bc50-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"shopping-list-app-2bc50",
+    storageBucket:"shopping-list-app-2bc50.firebasestorage.app",
+    messagingSenderId:"359151999312",
+    appId:"1:359151999312:web:a610c1cf88d36acad6b455"
+  });
+  db=firebase.database();
+  fbUp=true;
+}catch(e){fbUp=false;}
+
+// ---- This phone's ID (made once, kept on the phone) ----
+function getDevId(){
+  var id=null;
+  try{id=localStorage.getItem('sl3_devid');}catch(e){}
+  if(!id){
+    id='';for(var i=0;i<6;i++)id+='ABCDEFGHJKMNPQRSTUVWXYZ23456789'.charAt(Math.floor(Math.random()*31));
+    try{localStorage.setItem('sl3_devid',id);}catch(e){}
+  }
+  return id;
+}
+var devId=getDevId();
+
+// ---- Which shop section an item belongs to ----
+// Sections in the order single words are tried; phrases (with a space) always win over single words.
+var KR=[
+['Lukas',['lukas','for lukas','lukas\'s','f\u00FCr lukas','para lukas']],
+['Personal Care',['shampoo','conditioner','toothpaste','tooth paste','toothbrush','tooth brush','deodorant','lotion','sunscreen','sun cream','razor','shaving','shaving cream','shaving foam','glasses','optician','contact lens','lens','perfume','parfume','parfum','cologne','creme','face cream','body cream','moisturizer','moisturiser','hand cream','hand soap','hand wash','lip balm','nail polish','makeup','mascara','lipstick','floss','dental','mouthwash','mouth wash','hair gel','hair dye','body wash','shower gel','face wash','cleanser','serum','aftershave','medicine','aspirin','ibuprofen','paracetamol','bandaid','band aid','plaster','first aid','tampon','pad','cotton','zahnpasta','zahnb\u00FCrste','duschgel','deo','rasierer','sonnencreme','hautcreme','pflaster','champ\u00FA','pasta de dientes','cepillo de dientes','desodorante','crema solar','jab\u00F3n de manos','gel de ducha']],
+['Household',['towel','dish soap','soap','detergent','laundry','sponge','trash bag','bin bag','foil','aluminium foil','cling wrap','cling film','plastic wrap','parchment','baking paper','paper towel','kitchen roll','kitchen paper','tissue','toilet paper','loo roll','napkin','cleaner','bleach','disinfectant','candle','battery','batteries','bulb','light bulb','garbage bag','ziplock','freezer bag','air freshener','fabric softener','stain remover','mop','broom','gloves','steel wool','scrub','softener','softner','washing','toilet','dishwasher','washing pill','dishwasher tab','rinse aid','descaler','matches','lighter','sp\u00FClmittel','waschmittel','weichsp\u00FCler','toilettenpapier','klopapier','k\u00FCchenrolle','m\u00FCllbeutel','alufolie','frischhaltefolie','schwamm','batterien','kerze','detergente','lavavajillas','suavizante','papel higi\u00E9nico','papel de cocina','bolsas de basura','papel de aluminio','esponja','pilas','vela','lej\u00EDa']],
+['Baby & Kids',['diaper','nappy','nappies','baby food','formula','baby wipe','wipes','pacifier','dummy','baby','windeln','babynahrung','feuchtt\u00FCcher','schnuller','pa\u00F1ales','potito','toallitas','chupete']],
+['Pet',['dog food','cat food','pet food','kibble','pet treat','litter','cat litter','dog treat','dog','cat','hundefutter','katzenfutter','katzenstreu','pienso','comida para perro','comida para gato','arena de gato']],
+['Fresh Herbs & Aromatics',['basil','cilantro','coriander','parsley','mint','dill','rosemary','thyme','oregano','chive','chives','tarragon','sage','bay leaf','lemongrass','curry leaf','herb','fresh herb','basilikum','petersilie','schnittlauch','minze','rosmarin','thymian','albahaca','perejil','menta','romero','tomillo']],
+['Poultry',['chicken','turkey','duck','goose','quail','poultry','chicken wing','chicken thigh','drumstick','chicken breast','chicken fillet','h\u00E4hnchen','h\u00FChnchen','huhn','pute','putenbrust','ente','pollo','pavo','pato','pechuga','muslo']],
+['Fish & Seafood',['salmon','tuna','cod','halibut','trout','sea bass','seabass','tilapia','mackerel','sardine','anchovy','anchovies','swordfish','shrimp','prawn','crab','lobster','mussel','clam','oyster','scallop','squid','calamari','octopus','fish','seafood','sea bream','dorada','hake','monkfish','lachs','thunfisch','forelle','kabeljau','garnelen','fisch','meeresfr\u00FCchte','salm\u00F3n','at\u00FAn','bacalao','merluza','lubina','gambas','langostinos','calamares','pulpo','mejillones','pescado','marisco','boquerones','sardinas']],
+['Charcuterie & Cured Meats',['prosciutto','salami','chorizo','pepperoni','mortadella','bresaola','pancetta','coppa','nduja','sobrasada','jamon','jam\u00F3n','serrano','iberico','ib\u00E9rico','fuet','bratwurst','wurst','cold cut','cold cuts','cured','smoked meat','pastrami','corned beef','pate','p\u00E2t\u00E9','terrine','deli meat','sliced meat','lomo','salchich\u00F3n','aufschnitt','schinken','leberwurst','mettwurst','landj\u00E4ger','embutido','fiambre','lomo embuchado','longaniza']],
+['Meat',['beef','pork','steak','lamb','veal','venison','rabbit','bison','goat','ground meat','ground beef','mince','minced','minced meat','fillet','filet','cutlet','chop','rib','ribs','tenderloin','sirloin','ribeye','brisket','roast','rack','bacon','sausage','sausages','ham','meat','burger','burgers','meatball','meatballs','fleisch','rind','rindfleisch','schwein','schweinefleisch','hackfleisch','lamm','kalb','schnitzel','w\u00FCrstchen','speck','carne','ternera','cerdo','cordero','carne picada','filete','chuletas','costillas','hamburguesa','salchichas','panceta']],
+['Eggs',['egg','eggs','quail egg','free range eggs','eier','ei','huevos','huevo']],
+['Plant-Based Chilled',['oat milk','almond milk','soy milk','soya milk','coconut milk','rice milk','cashew milk','plant milk','plant based','plant-based','vegan cheese','vegan yogurt','tofu','tempeh','seitan','beyond meat','impossible','vegan butter','oat drink','hafermilch','mandelmilch','sojamilch','haferdrink','leche de avena','leche de almendras','leche de soja','bebida de avena']],
+['Chilled & Dairy',['milk','cheese','yogurt','yoghurt','butter','cream cheese','sour cream','whipping cream','heavy cream','double cream','single cream','quark','kefir','skyr','cottage cheese','ricotta','mozzarella','parmesan','cheddar','gouda','brie','camembert','feta','goat cheese','manchego','cream','mascarpone','burrata','dairy','halloumi','emmental','edam','creme fraiche','cr\u00E8me fra\u00EEche','milch','k\u00E4se','kaese','joghurt','sahne','schlagsahne','frischk\u00E4se','vollmilch','magermilch','leche','queso','yogur','mantequilla','nata','queso fresco','reques\u00F3n']],
+['Oils, Vinegars & Condiments',['oil','olive oil','coconut oil','sesame oil','sunflower oil','rapeseed oil','vinegar','balsamic','ketchup','mustard','mayo','mayonnaise','sauce','soy sauce','fish sauce','hot sauce','tabasco','sriracha','honey','jam','marmalade','peanut butter','almond butter','nutella','tahini','salsa','chutney','dressing','aioli','alioli','tomato sauce','passata','pesto','bbq sauce','worcester','gochujang','doenjang','\u00F6l','oliven\u00F6l','essig','senf','honig','marmelade','erdnussbutter','sojasauce','so\u00DFe','sosse','aceite','aceite de oliva','vinagre','mostaza','mayonesa','miel','mermelada','salsa de tomate','salsa de soja','tomate frito']],
+['Canned & Preserved Goods',['canned','tinned','tin','can of','pickle','pickles','gherkin','caper','capers','olive','olives','sun dried','sundried','preserved','jarred','hummus','antipasti','tapenade','chickpeas can','canned tomatoes','tinned tomatoes','baked beans','sweetcorn can','dose','konserve','gurken','essiggurken','oliven','kapern','lata','conserva','pepinillos','aceitunas','alcaparras','garbanzos cocidos','tomate triturado']],
+['Frozen Foods',['frozen','ice cream','gelato','sorbet','popsicle','ice lolly','frozen pizza','fish stick','fish finger','fish fingers','frozen peas','frozen berries','frozen vegetables','dumplings','gyoza','ice cubes','tiefk\u00FChl','tk','eis','eiscreme','fischst\u00E4bchen','tiefk\u00FChlpizza','congelado','congelados','helado','polo','pizza congelada','guisantes congelados']],
+['Water, Juices & Soft Drinks',['water','mineral water','sparkling water','still water','juice','orange juice','apple juice','grape juice','lemonade','soda','cola','coke','pepsi','sprite','fanta','tonic','ginger ale','energy drink','smoothie','kombucha','drink','drinks','iced tea','coconut water','soft drink','fizzy drink','wasser','mineralwasser','sprudel','saft','apfelsaft','orangensaft','limonade','limo','eistee','agua','agua con gas','agua sin gas','zumo','zumo de naranja','refresco','gaseosa','limonada','t\u00F3nica']],
+['Coffee, Tea & Specialty',['coffee','espresso','coffee bean','coffee beans','ground coffee','instant coffee','coffee pods','capsules','nespresso','tea','green tea','black tea','herbal tea','chamomile','matcha','milk tea','chai','tea bags','cocoa drink','hot chocolate','kaffee','kaffeebohnen','kaffeekapseln','tee','gr\u00FCner tee','schwarztee','kr\u00E4utertee','kakao','caf\u00E9','caf\u00E9 molido','c\u00E1psulas','t\u00E9','t\u00E9 verde','infusi\u00F3n','manzanilla','cacao']],
+['Wine, Beer & Spirits',['wine','red wine','white wine','ros\u00E9','rose wine','prosecco','champagne','cava','beer','lager','ale','ipa','stout','cider','cerveza','whisky','whiskey','rum','vodka','gin','brandy','tequila','liqueur','aperol','campari','vermouth','sangria','soju','sake','makgeolli','alcohol','wein','rotwein','wei\u00DFwein','sekt','bier','schnaps','lik\u00F6r','vino','vino tinto','vino blanco','sidra','ginebra','ron','licor','vermut']],
+['Ready-Made & Convenience',['ready meal','microwave meal','instant noodle','instant noodles','pre-made','pre-cooked','rotisserie','coleslaw','potato salad','pizza','sandwich','sushi','prepared','ready to eat','salad kit','soup','fertiggericht','fertigpizza','t\u00FCtensuppe','instantnudeln','precocinado','comida preparada','sopa','empanada','tortilla de patatas']],
+['Special Diet & Health',['gluten free','gluten-free','glutenfree','sugar free','sugar-free','lactose free','lactose-free','keto','paleo','organic','protein powder','whey','collagen','probiotic','probiotics','vitamin','vitamins','supplement','supplements','superfood','omega','magnesium','electrolytes','glutenfrei','laktosefrei','zuckerfrei','bio','vitamine','nahrungserg\u00E4nzung','proteinpulver','sin gluten','sin az\u00FAcar','sin lactosa','ecol\u00F3gico','vitaminas','prote\u00EDna en polvo']],
+['Produce',['apple','apples','banana','bananas','grape','grapes','orange','oranges','lemon','lemons','lime','limes','avocado','avocados','tomato','tomatoes','cucumber','lettuce','romaine','broccoli','cabbage','beet','beetroot','paprika','onion','onions','garlic','potato','potatoes','carrot','carrots','spinach','pepper','peppers','bell pepper','celery','mushroom','mushrooms','fruit','fruits','berry','berries','strawberry','strawberries','blueberry','blueberries','raspberry','raspberries','kale','corn','zucchini','courgette','mango','pear','pears','peach','peaches','pineapple','melon','watermelon','ginger','scallion','spring onion','leek','shallot','fennel','artichoke','asparagus','eggplant','aubergine','radish','turnip','sweet potato','squash','pumpkin','cherry','cherries','plum','apricot','nectarine','fig','figs','pomegranate','kiwi','coconut','papaya','clementine','tangerine','mandarin','grapefruit','arugula','rocket','chard','bok choy','bean sprout','bean sprouts','snap pea','green bean','green beans','chili','chilli','produce','vegetable','vegetables','veg','salad','cauliflower','brussels sprouts','sweetcorn','dates','lychee','passion fruit','persimmon','\u00E4pfel','apfel','bananen','trauben','orangen','zitrone','zitronen','tomaten','gurke','salat','brokkoli','kohl','zwiebeln','zwiebel','knoblauch','kartoffeln','karotten','m\u00F6hren','spinat','pilze','champignons','obst','beeren','erdbeeren','himbeeren','blaubeeren','kirschen','birnen','pfirsich','melone','ingwer','lauch','gem\u00FCse','blumenkohl','k\u00FCrbis','manzanas','manzana','pl\u00E1tano','pl\u00E1tanos','uvas','naranjas','naranja','lim\u00F3n','limones','lima','aguacate','tomates','tomate','pepino','lechuga','br\u00F3coli','col','repollo','cebolla','cebollas','ajo','patatas','patata','zanahoria','zanahorias','espinacas','pimiento','pimientos','champi\u00F1ones','setas','fruta','fresas','ar\u00E1ndanos','frambuesas','cerezas','peras','pera','melocot\u00F3n','mel\u00F3n','sand\u00EDa','pi\u00F1a','jengibre','puerro','calabac\u00EDn','calabaza','berenjena','verdura','verduras','ensalada','coliflor','higos']],
+['Bread & Bakery',['bread','bagel','bagels','croissant','croissants','baguette','ciabatta','focaccia','sourdough','pita','naan','brioche','roll','rolls','bread roll','tortilla','tortillas','wrap','wraps','flatbread','ensaimada','rye bread','pumpernickel','toast','sliced bread','buns','burger buns','brot','br\u00F6tchen','semmel','vollkornbrot','toastbrot','brezel','brezen','pan','pan de molde','barra de pan','cruas\u00E1n','bollos','pan integral']],
+['Breakfast Foods',['cereal','cereals','oatmeal','oats','porridge','muesli','granola','pancake','pancakes','waffle','waffles','syrup','maple syrup','cornflakes','weetabix','m\u00FCsli','haferflocken','pfannkuchen','ahornsirup','cereales','avena','copos de avena','tortitas','gofres','sirope']],
+['Rice, Pasta, Grains & Legumes',['rice','basmati','jasmine rice','pasta','spaghetti','penne','fusilli','linguine','tagliatelle','macaroni','lasagna','lasagne','noodle','noodles','ramen','udon','soba','couscous','quinoa','bulgur','barley','farro','polenta','lentil','lentils','chickpea','chickpeas','bean','beans','black bean','kidney bean','kidney beans','edamame','chia','flax','risotto rice','gnocchi','reis','nudeln','linsen','kichererbsen','bohnen','graupen','grie\u00DF','arroz','espaguetis','macarrones','fideos','lentejas','garbanzos','alubias','jud\u00EDas','cusc\u00FAs']],
+['Pantry Staples',['flour','sugar','brown sugar','icing sugar','salt','sea salt','baking soda','baking powder','yeast','cornstarch','cornflour','gelatin','gelatine','cocoa','cocoa powder','vanilla','extract','spice','spices','cumin','turmeric','cinnamon','nutmeg','curry powder','stock','broth','bouillon','stock cube','stock cubes','breadcrumbs','paprika powder','chili flakes','black pepper','peppercorns','seasoning','bread flour','mehl','zucker','salz','backpulver','hefe','speisest\u00E4rke','vanillezucker','gew\u00FCrze','pfeffer','br\u00FChe','gem\u00FCsebr\u00FChe','paniermehl','zimt','harina','az\u00FAcar','sal','levadura','bicarbonato','maicena','especias','pimienta','caldo','pastillas de caldo','pan rallado','canela','comino','piment\u00F3n']],
+['Snacks',['chips','crisps','cracker','crackers','nuts','almond','almonds','walnut','walnuts','cashew','cashews','pistachio','pistachios','peanut','peanuts','pecan','pecans','popcorn','pretzel','pretzels','trail mix','rice cake','rice cakes','energy bar','protein bar','jerky','dried fruit','raisin','raisins','tortilla chips','nachos','seaweed snack','kr\u00E4cker','n\u00FCsse','mandeln','waln\u00FCsse','erdn\u00FCsse','cashewkerne','brezeln','studentenfutter','rosinen','trockenfr\u00FCchte','patatas fritas','galletas saladas','frutos secos','almendras','nueces','cacahuetes','anacardos','pistachos','palomitas','pasas','fruta seca']],
+['Sweets & Desserts',['chocolate','candy','candies','sweets','sweet','gummy','gummies','haribo','marshmallow','marshmallows','cookie','cookies','biscuit','biscuits','wafer','wafers','brownie','brownies','muffin','muffins','cupcake','cupcakes','cake','pastry','pastries','pie','tart','scone','scones','donut','doughnut','donuts','pudding','custard','flan','mousse','tiramisu','milchreis','rice pudding','chocolate bar','kinder','oreo','dessert','desserts','schokolade','schoko','bonbons','gummib\u00E4rchen','kekse','pl\u00E4tzchen','kuchen','torte','waffeln','lebkuchen','nachtisch','caramelos','gominolas','galletas','tarta','pastel','bizcocho','magdalenas','natillas','postre','turr\u00F3n','churros']]
+];
+// ─── EXTRA VOCABULARY (added 12 Nov 2026; merged into KR below) ───
+var KX=[
+['Personal Care',['hay fever','hairspray','hair spray','hair mask','hair oil','hair brush','hairbrush','comb','hair ties','hair bands','bobby pins','hair clips','hair wax','hair colour','hair color','hair removal cream','hair removal','dry shampoo','body lotion','body butter','body spray','body scrub','hand sanitizer','hand sanitiser','sanitizer','sanitiser','hand gel','cotton pads','cotton buds','cotton wool','cotton balls','q-tips','makeup remover','make-up remover','makeup wipes','face wipes','wet wipes','micellar water','toner','face mask','sheet mask','eye cream','night cream','day cream','skin cream','foot cream','antiseptic cream','cold sore cream','bb cream','cc cream','barrier cream','itch cream','hydrocortisone','moisturising cream','moisturizing cream','sun lotion','after sun','aftersun','sunblock','tanning lotion','self tan','lip gloss','lip salve','foundation','concealer','eyeliner','eyeshadow','primer','blush','blusher','bronzer','highlighter stick','nail file','nail clippers','nail scissors','nail polish remover','tweezers','razors','razor blades','shaving gel','wax strips','sanitary pads','sanitary towels','panty liners','pantyliners','menstrual cup','condoms','lubricant','pregnancy test','contact lens solution','contact lenses','eye drops','ear drops','nasal spray','cough syrup','cough drops','cough sweets','cough medicine','throat lozenges','lozenges','strepsils','painkillers','pain relief','tylenol','advil','nurofen','antihistamine','allergy tablets','hay fever tablets','antacid','rennie','gaviscon','laxative','imodium','bandage','bandages','plasters','blister plasters','heat patches','antiseptic','thermometer','interdental brushes','toothbrush heads','dental floss','denture tablets','antiperspirant','roll-on','bubble bath','bath bomb','bath salts','epsom salts','bath oil','shower cap','loofah','pumice stone','vaseline','petroleum jelly','talc','talcum powder','insoles','mosquito repellent','insect repellent','bite cream','earplugs','sleep mask','nicotine gum','nicotine patches','gel','colonia','acondicionador','mascarilla','laca','gomina','espuma de afeitar','maquinillas','cuchillas de afeitar','cuchillas','compresas','tampones','salvaslips','bastoncillos','algod\u00F3n','discos desmaquillantes','desmaquillante','agua micelar','crema hidratante','crema de manos','crema de cara','protector solar','b\u00E1lsamo labial','cacao labial','pintalabios','r\u00EDmel','esmalte de u\u00F1as','quitaesmalte','lima de u\u00F1as','corta\u00FA\u00F1as','bandas de cera','dent\u00EDfrico','colutorio','enjuague bucal','hilo dental','seda dental','cepillos interdentales','tiritas','vendas','gasas','esparadrapo','agua oxigenada','betadine','term\u00F3metro','ibuprofeno','aspirina','frenadol','jarabe','pastillas para la garganta','gotas para los ojos','suero fisiol\u00F3gico','preservativos','test de embarazo','repelente','gel hidroalcoh\u00F3lico','jab\u00F3n','gel de ba\u00F1o','sp\u00FClung','haarsp\u00FClung','haarkur','haarspray','haargel','haarwachs','haarfarbe','haarb\u00FCrste','b\u00FCrste','kamm','haargummis','duschbad','schaumbad','badezusatz','seife','handseife','fl\u00FCssigseife','deodorant','deoroller','parf\u00FCm','bodylotion','k\u00F6rperlotion','k\u00F6rpercreme','handcreme','gesichtscreme','feuchtigkeitscreme','nachtcreme','tagescreme','augencreme','sonnenmilch','sonnenschutz','lippenpflege','labello','lippenstift','wimperntusche','nagellack','nagellackentferner','nagelfeile','nagelschere','nagelknipser','pinzette','rasierklingen','rasierschaum','rasiergel','rasierwasser','wattepads','wattest\u00E4bchen','watte','abschminkt\u00FCcher','gesichtsreinigung','reinigungsmilch','gesichtswasser','gesichtsmaske','peeling','zahncreme','zahnseide','mundsp\u00FClung','mundwasser','interdentalb\u00FCrsten','tampons','binden','slipeinlagen','damenbinden','kondome','schwangerschaftstest','verband','mullbinde','desinfektionsmittel','desinfektionsspray','handdesinfektion','fieberthermometer','schmerztabletten','kopfschmerztabletten','nasenspray','hustensaft','hustenbonbons','halstabletten','augentropfen','kontaktlinsenfl\u00FCssigkeit','kontaktlinsen','ohrst\u00F6psel','ohropax','m\u00FCckenschutz','autan','insektenschutz','fu\u00DFcreme','einlegesohlen']],
+['Household',['cake tin','loaf tin','baking tin','roasting tin','biscuit tin','wine glasses','drinking glasses','ice cube trays','ice cube tray','kitchen towels','bin liners','bin bag','dishwasher tablets','dishwasher salt','washing powder','washing up liquid','washing-up liquid','laundry detergent','laundry pods','laundry liquid','fabric conditioner','toilet cleaner','toilet rolls','toilet roll','toilet brush','toilet blocks','glass cleaner','window cleaner','all-purpose cleaner','multi-purpose cleaner','floor cleaner','oven cleaner','limescale remover','drain cleaner','drain unblocker','mould remover','mold remover','furniture polish','shoe polish','dusters','duster','microfibre cloth','microfiber cloth','cloths','cloth','dishcloth','dishcloths','tea towels','scourer','scourers','scouring pads','rubber gloves','vacuum bags','vacuum cleaner bags','clothes pegs','pegs','clothespins','hangers','coat hangers','light bulbs','lightbulb','lightbulbs','aa batteries','aaa batteries','extension cord','extension lead','tape','sellotape','duct tape','masking tape','packing tape','glue','superglue','glue stick','blu tack','string','kitchen string','twine','scissors','pens','pencils','markers','highlighters','notebook','notepad','envelopes','stamps','printer paper','printer ink','ink cartridge','wrapping paper','gift wrap','gift bag','gift bags','ribbon','balloons','birthday card','greeting card','cards','birthday candles','tealights','tea lights','firelighters','charcoal','charcoal briquettes','lighter fluid','gas canister','gas bottle','camping gas','firewood','kindling','toothpicks','cocktail sticks','skewers','straws','paper plates','party plates','plastic cups','paper cups','plastic cutlery','serviettes','sandwich bags','food bags','lunch bags','ice cube bags','ziploc','zip bags','carrier bags','shopping bags','paper bags','plastic bags','baking parchment','greaseproof paper','wax paper','tin foil','aluminum foil','kitchen foil','foil trays','roasting bags','cupcake cases','muffin cases','baking cases','insect spray','fly spray','ant trap','ant powder','mouse trap','moth balls','plant food','potting soil','compost','flowers','house plant','plants','umbrella','lint roller','sewing kit','shoe laces','tupperware','containers','food containers','dish brush','washing-up brush','cleaning spray','cleaning wipes','antibacterial wipes','disinfectant wipes','antibacterial spray','dustpan','bucket','wd40','rubber bands','paper clips','post-it','sticky notes','usb cable','phone charger','charger','fuses','fuse','screws','nails','picture hooks','zip ties','cable ties','bin','febreze','vanish','domestos','fairy liquid','finish tablets','persil','ariel','cillit bang','viakal','mr muscle','dettol','ironing water','water filter','brita','brita filter','soda stream gas','sodastream','dehumidifier','newspaper','magazine','lottery ticket','bombilla','bombillas','cerillas','mechero','encendedor','pastillas de encendido','carb\u00F3n','servilletas','papel de horno','papel film','film transparente','papel albal','albal','bolsas de congelar','bolsas zip','fregona','mocho','escoba','recogedor','bayeta','bayetas','estropajo','estropajos','guantes','guantes de goma','mistol','pastillas lavavajillas','sal lavavajillas','abrillantador','quitamanchas','amoniaco','amon\u00EDaco','fregasuelos','limpiacristales','limpiahogar','limpiador','multiusos','desengrasante','kh-7','kh7','antical','desatascador','ambientador','insecticida','matamoscas','antimosquitos','pa\u00F1uelos','pa\u00F1uelos de papel','kleenex','rollo de cocina','pinzas de la ropa','perchas','tendedero','bolsas de aspiradora','air wick','airwick','duftkerze','duftkerzen','kerzen','teelichter','streichh\u00F6lzer','feuerzeug','grillanz\u00FCnder','grillkohle','holzkohle','gl\u00FChbirne','gl\u00FChbirnen','leuchtmittel','m\u00FClls\u00E4cke','gelber sack','gefrierbeutel','fr\u00FChst\u00FCcksbeutel','backpapier','k\u00FCchent\u00FCcher','zewa','taschent\u00FCcher','servietten','pril','sp\u00FClmaschinentabs','geschirrsp\u00FCltabs','klarsp\u00FCler','sp\u00FClmaschinensalz','regeneriersalz','waschpulver','colorwaschmittel','vollwaschmittel','feinwaschmittel','fleckenentferner','entkalker','kalkreiniger','wc-reiniger','wc reiniger','wc-steine','wc stein','badreiniger','glasreiniger','allzweckreiniger','putzmittel','scheuermilch','essigreiniger','backofenreiniger','abflussreiniger','rohrreiniger','bodenreiniger','schw\u00E4mme','sp\u00FClschwamm','sp\u00FClt\u00FCcher','sp\u00FCllappen','putzlappen','lappen','mikrofasertuch','staubtuch','staubsaugerbeutel','besen','wischmopp','eimer','handschuhe','gummihandschuhe','w\u00E4scheklammern','kleiderb\u00FCgel','insektenspray','m\u00FCckenspray','fliegenklatsche','mottenkugeln','raumspray','lufterfrischer','blumenerde','blumen','d\u00FCnger','geschenkpapier','klebeband','tesa','tesafilm','kleber','sekundenkleber','schere','stifte','kugelschreiber','briefumschl\u00E4ge','briefmarken','druckerpapier','zahnstocher','strohhalme','pappteller','plastikbecher','pappbecher','schaschlikspie\u00DFe','grillspie\u00DFe']],
+['Baby & Kids',['teething gel','teether','bibs','bib','pull-ups','sippy cup','fruit pouches','baby shampoo','baby lotion','baby bath','baby rice','baby porridge','baby cereal','follow on milk','toddler milk','growing up milk','nappy sacks','nappy bags','nappy cream','swim nappies','pampers','huggies','dodot','hipp','aptamil','gripe water','calpol','lunchbox','lunch box','papilla','papillas','leche de continuaci\u00F3n','biber\u00F3n','biberones','tetinas','chupetes','toallitas h\u00FAmedas','crema pa\u00F1al','gl\u00E4schen','babybrei','milchpulver','folgemilch','babymilch','fl\u00E4schchen','babyt\u00FCcher','wundschutzcreme','penaten','baby\u00F6l','babypuder','l\u00E4tzchen','schwimmwindeln']],
+['Pet',['bird seed','bird food','fish food','hamster food','rabbit food','guinea pig food','poop bags','poo bags','dog poo bags','flea treatment','flea collar','worming tablets','catnip','cat grass','hay','sawdust','pet shampoo','dog shampoo','dental sticks','dentastix','dog chews','dog biscuits','dog bones','cat biscuits','cat toys','cat toy','dog toy','dog toys','puppy pads','puppy food','kitten food','whiskas','sheba','purina','pedigree','royal canin','friskies','dreamies','leckerli','hundeleckerli','katzenleckerli','kauknochen','hundekotbeutel','kotbeutel','vogelfutter','fischfutter','hamsterfutter','kaninchenfutter','heu','einstreu','nassfutter','trockenfutter','comida perro','comida gato','comida para perros','comida para gatos','arena gato','arena para gatos','latas gato','alpiste','heno']],
+['Fresh Herbs & Aromatics',['bay leaves','curry leaves','lemon balm','lovage','marjoram','chervil','sorrel','wild garlic','garlic chives','fresh herbs','lavender','hierbabuena','cebollino','eneldo','estrag\u00F3n','salvia','laurel fresco','kr\u00E4uter','dill','b\u00E4rlauch','koriander','salbei','estragon']],
+['Poultry',['guinea fowl','pheasant','partridge','poussin','capon','cornish hen','chicken livers','chicken legs','chicken mince','turkey mince','turkey steaks','h\u00E4hnchenbrust','h\u00E4hnchenschenkel','h\u00E4hnchenfl\u00FCgel','h\u00E4hnchenfilet','putenschnitzel','putenhack','gefl\u00FCgel','suppenhuhn','brath\u00E4hnchen','pechuga de pollo','muslos de pollo','alitas','alitas de pollo','contramuslos','pollo entero','pollo asado','pechuga de pavo','codornices']],
+['Fish & Seafood',['haddock','plaice','sole','herring','kipper','kippers','surimi','caviar','eel','pollock','turbot','langoustine','langoustines','crayfish','cockle','cockles','whitebait','sprats','roe','taramasalata','rollmops','pangasius','basa','catfish','perch','pike','carp','snapper','grouper','barramundi','john dory','whiting','coley','bream','mullet','whelks','razor clams','crab meat','crabmeat','crab sticks','scampi','shellfish','seafood mix','smoked fish','gravlax','sashimi','cuttlefish','prawn cocktail','fish cakes','fish pie','matjes','hering','heringe','bismarckhering','scholle','zander','seelachs','rotbarsch','dorade','wolfsbarsch','krabben','nordseekrabben','muscheln','tintenfisch','r\u00E4ucherlachs','fischfilet','sepia','chipirones','lenguado','rodaballo','pez espada','salmonete','jurel','caballa','trucha','arenques','anguila','gulas','palitos de cangrejo','huevas','bonito','melva','ventresca','berberechos','almejas','ostras','cigalas','carabineros','bogavante','langosta','centollo','chopitos','salm\u00F3n ahumado','anchoas','filetes de pescado']],
+['Charcuterie & Cured Meats',['parma ham','parma','serrano ham','iberico ham','black forest ham','cooked ham','smoked ham','sliced ham','ham slices','honey roast ham','york ham','turkey ham','chicken slices','turkey slices','cold meat','cold meats','cured meat','cured ham','lardons','guanciale','liverwurst','liver sausage','liver pate','rillettes','foie gras','foie','luncheon meat','cecina','lac\u00F3n','chicharrones','mortadela','jam\u00F3n york','jamon york','jam\u00F3n cocido','jam\u00F3n serrano','jam\u00F3n ib\u00E9rico','pavo en lonchas','butifarra','botifarra','camaiot','chistorra','morcilla','kochschinken','rohschinken','schwarzw\u00E4lder schinken','lachsschinken','bierschinken','fleischwurst','lyoner','teewurst','blutwurst','cabanossi','pfefferbei\u00DFer','wiener','wienerle','bockwurst','wei\u00DFwurst','wei\u00DFw\u00FCrste','n\u00FCrnberger']],
+['Meat',['baby back ribs','beicon','tocino','gammon','frankfurter','frankfurters','hot dog','hot dogs','kebab','liver','oxtail','meatloaf','chipolata','chipolatas','entrecote','entrec\u00F4te','t-bone','tripe','tongue','mutton','wild boar','shank','lamb shank','topside','silverside','skirt steak','stewing steak','diced beef','diced lamb','diced pork','pork shoulder','pork tenderloin','black pudding','white pudding','haggis','cocktail sausages','burger patties','patties','kofta','gyros','doner','souvlaki','escalope','escalopes','medallions','carpaccio','steak tartare','marrow bones','soup bones','ham hock','pork knuckle','pork belly','spare ribs','pulled pork','gulasch','goulash','rouladen','braten','schweinebraten','rinderbraten','kotelett','koteletts','schweinefilet','rinderfilet','rinderhack','rindersteak','rumpsteak','h\u00FCftsteak','nackensteak','nackensteaks','kassler','eisbein','haxe','frikadellen','bratw\u00FCrste','grillfleisch','grillw\u00FCrste','mett','hackepeter','leber','zunge','lammkeule','lammkoteletts','solomillo','lomo de cerdo','entrecot','chulet\u00F3n','secreto ib\u00E9rico','presa ib\u00E9rica','pluma ib\u00E9rica','carrilleras','rabo de toro','alb\u00F3ndigas','pinchos morunos','hamburguesas','salchichas frescas','costillas de cerdo','chuletas de cordero','paletilla','pierna de cordero','conejo','h\u00EDgado','lechona','carne de ternera','carne de cerdo','carne para guisar','bistec','filetes de ternera']],
+['Eggs',['duck eggs','duck egg','boiled eggs','liquid egg','egg whites','eggs medium','eggs large','huevos camperos','huevos ecol\u00F3gicos','docena de huevos','claras de huevo','freilandeier','bio eier','bio-eier']],
+['Plant-Based Chilled',['soy yogurt','soya yogurt','soy yoghurt','soya yoghurt','coconut yogurt','coconut yoghurt','plant butter','oat cream','soya cream','soy cream','almond drink','soya drink','soy drink','rice drink','hazelnut milk','pea milk','vegan mince','veggie mince','vegan sausage','vegan sausages','veggie sausage','veggie sausages','vegetarian sausage','vegetarian sausages','vegan burger','vegan burgers','veggie burger','veggie burgers','vegetarian burger','bean burger','vegan chicken','vegan nuggets','vegan mayo','meat free','meat-free','smoked tofu','silken tofu','jackfruit','quorn','oatly','alpro','vegan','veggie','vegetarian','soya','r\u00E4uchertofu','sojajoghurt','sojadrink','hafersahne','veganer aufschnitt','vegane wurst','veggie hack','bebida de soja','bebida de almendras','bebida de arroz','yogur de soja','hamburguesa vegetal','tofu ahumado']],
+['Chilled & Dairy',['kr\u00E4uterquark','crema de queso','crema de leche','goats cheese','goat\'s cheese','buttermilk','milkshake','fromage frais','paneer','gruyere','gruy\u00E8re','gorgonzola','stilton','pecorino','provolone','raclette','fondue','babybel','philadelphia','margarine','cheese spread','ghee','lard','curd','curds','labneh','tzatziki','string cheese','cheese strings','cheestrings','cheese slices','grated cheese','sliced cheese','roquefort','comt\u00E9','comte','reblochon','taleggio','fontina','asiago','grana padano','jarlsberg','havarti','monterey jack','red leicester','double gloucester','wensleydale','maasdam','leerdammer','tilsiter','appenzeller','bergk\u00E4se','limburger','harzer','butterk\u00E4se','munster','boursin','laughing cow','dairylea','kiri','petit suisse','petits filous','actimel','yakult','danone','activia','m\u00FCller','fage','smetana','ayran','lassi','pouring cream','cooking cream','squirty cream','spray cream','eggnog','egg nog','half and half','creamer','coffee creamer','coffee cream','uht milk','long life milk','fresh milk','goat milk','goats milk','sheep cheese','yoghurts','yogurts','natural yogurt','fruit yogurt','drinking yogurt','protein yogurt','protein pudding','queso de oveja','queso de cabra','queso curado','queso semicurado','queso tierno','queso mahon\u00E9s','queso rallado','queso en lonchas','queso crema','queso azul','tranchetes','quesitos','cuajada','k\u00E9fir','batido','batidos','yogur griego','yogures','nata para cocinar','nata montada','leche entera','leche semidesnatada','leche desnatada','leche condensada','leche evaporada','leche fresca','margarina','schmand','saure sahne','sauerrahm','cr\u00E8me fra\u00EEche','buttermilch','kondensmilch','kaffeesahne','schlagobers','h-milch','frischmilch','landmilch','ziegenk\u00E4se','schafsk\u00E4se','hirtenk\u00E4se','h\u00FCttenk\u00E4se','k\u00F6rniger frischk\u00E4se','scheibenk\u00E4se','reibek\u00E4se','streuk\u00E4se','schmelzk\u00E4se','emmentaler','camembert','quarkspeise','speisequark','magerquark','naturjoghurt','fruchtjoghurt','trinkjoghurt','kefir','butterschmalz','kr\u00E4uterbutter','rama','l\u00E4tta']],
+['Oils, Vinegars & Condiments',['sweet and sour sauce','relish','wasabi','teriyaki','hoisin','oyster sauce','curry paste','curry sauce','vinaigrette','agave','agave syrup','treacle','molasses','marmite','vegemite','mirin','cooking spray','spray oil','dijon','sambal','harissa','miso','miso paste','piri piri','peri peri','sweet chilli','chilli jam','ajvar','hp sauce','ponzu','rice wine','cooking wine','wine vinegar','white wine vinegar','red wine vinegar','sherry vinegar','malt vinegar','lemon juice','lime juice','peanut oil','groundnut oil','canola oil','corn oil','walnut oil','grapeseed oil','chili oil','chilli oil','frying oil','preserves','conserve','compote','fruit spread','hazelnut spread','chocolate spread','biscoff spread','sandwich spread','sandwich pickle','branston','piccalilli','horseradish sauce','horseradish cream','wasabi paste','garlic paste','ginger paste','tomato paste','tomato puree','tomato pur\u00E9e','tomato concentrate','anchovy paste','shrimp paste','tamarind','tamarind paste','burger sauce','garlic sauce','cheese sauce','white sauce','bechamel','b\u00E9chamel','hollandaise','bearnaise','pizza sauce','black bean sauce','satay','peanut sauce','lemon curd','salad cream','mint sauce','mint jelly','cranberry sauce','apple sauce','marinade','manuka honey','date syrup','golden syrup','tomatenmark','tomatenketchup','curryketchup','grillsauce','grillso\u00DFe','knoblauchso\u00DFe','remoulade','salatdressing','salatso\u00DFe','balsamico','sonnenblumen\u00F6l','raps\u00F6l','kokos\u00F6l','sesam\u00F6l','brat\u00F6l','meerrettich','sahnemeerrettich','pflaumenmus','apfelmus','nuss-nougat-creme','nougatcreme','konfit\u00FCre','gelee','r\u00FCbenkraut','zuckerr\u00FCbensirup','agavendicksaft','ahornsirup','tomate concentrado','aceite de girasol','aceite de coco','vinagre de m\u00F3dena','vinagre de manzana','vinagre de jerez','salsa brava','alioli','mojo','mojo pic\u00F3n','salsa barbacoa','salsa rosa','crema de cacao','crema de cacahuete','nocilla','sirope de agave','zumo de lim\u00F3n']],
+['Canned & Preserved Goods',['kokosmilch','leche de coco','sauerkraut','kimchi','spam','pickled','cornichons','silverskin onions','pickled onions','pickled beetroot','pickled cabbage','artichoke hearts','palm hearts','hearts of palm','roasted peppers','bamboo shoots','water chestnuts','chopped tomatoes','peeled tomatoes','crushed tomatoes','diced tomatoes','refried beans','mushy peas','marrowfat peas','fruit cocktail','pineapple chunks','pineapple rings','pineapple slices','peach slices','mandarin segments','pie filling','coconut cream','stuffed olives','vine leaves','dolmades','ratatouille','tuna in oil','tuna in brine','tuna in water','sardines in oil','rotkohl','rotkraut','gew\u00FCrzgurken','silberzwiebeln','mais dose','kidneybohnen','gehackte tomaten','gesch\u00E4lte tomaten','passierte tomaten','thunfisch dose','dosentomaten','dosenmais','pfirsiche dose','ananas dose','mandarinen dose','eingelegte','palmitos','pimientos del piquillo','piquillo','pimientos asados','pisto','fabada','cocido','callos','lentejas cocidas','alubias cocidas','garbanzos cocidos','jud\u00EDas cocidas','ma\u00EDz dulce','champi\u00F1ones laminados','tomate natural','tomate triturado','at\u00FAn en lata','at\u00FAn en aceite','at\u00FAn al natural','bonito del norte','mejillones en escabeche','sardinillas','caballa en aceite','melocot\u00F3n en alm\u00EDbar','pi\u00F1a en su jugo','conservas','esp\u00E1rragos blancos']],
+['Frozen Foods',['cubos de hielo','fries','french fries','oven chips','hash browns','ice','ice lollies','ice pops','croquettes','potato croquettes','magnum','cornetto','calippo','solero','viennetta','choc ice','choc ices','ice cream sandwich','frozen dessert','potato wedges','wedges','onion rings','chicken nuggets','nuggets','potato waffles','tater tots','rosti','r\u00F6sti','yorkshire puddings','yorkshire pudding','frozen yogurt','ben and jerrys','ben & jerry\'s','haagen dazs','h\u00E4agen-dazs','pommes','pommes frites','kroketten','rahmspinat','tiefk\u00FChlgem\u00FCse','tiefk\u00FChlspinat','tk-pizza','tk pizza','tk-gem\u00FCse','tk gem\u00FCse','eis am stiel','wassereis','eisw\u00FCrfel','san jacobos','empanadillas','varitas de merluza','palitos de pescado','verduras congeladas','menestra','hielo','cubitos de hielo','polos','helados']],
+['Water, Juices & Soft Drinks',['ice tea','lipton','can of coke','can of cola','cans of coke','refresco en lata','coca-cola en lata','coca cola en lata','cream soda','energy drink','energydrink','zitronensaft','eistee','cordial','red bull','gatorade','powerade','lucozade','7up','seven up','schweppes','seltzer','san pellegrino','evian','perrier','volvic','vittel','soda water','fizzy water','flavoured water','flavored water','orange squash','blackcurrant squash','squash drink','ribena','robinsons','vimto','irn bru','dr pepper','mountain dew','aquarius','nestea','fuze tea','capri sun','fruit shoot','tropicana','monster energy','isotonic','fizzy drinks','mixers','mixer','tonic water','elderflower','elderflower cordial','bitter lemon','ginger beer','root beer','coke zero','diet coke','coca cola','coca-cola','apfelschorle','schorle','saftschorle','spezi','mezzo mix','club mate','bionade','almdudler','malzbier','multivitaminsaft','traubensaft','tomatensaft','karottensaft','stilles wasser','wasser still','wasser medium','sprudelwasser','selters','horchata','mosto','n\u00E9ctar','bebida isot\u00F3nica','bebida energ\u00E9tica','agua mineral','botellas de agua','garrafa de agua','granizado','zumo de manzana','zumo de pi\u00F1a','zumo de melocot\u00F3n','refrescos','coca cola zero']],
+['Coffee, Tea & Specialty',['decaf','decaffeinated','cappuccino','latte','macchiato','mocha','americano','flat white','rooibos','earl grey','dolce gusto','tassimo','senseo','ovaltine','horlicks','oolong','darjeeling','assam','jasmine tea','lemon tea','ginger tea','fennel tea','mint tea','peppermint tea','fruit tea','camomile tea','hibiscus','yerba mate','coffee filters','filter papers','filter coffee','lavazza','illy','nescafe','nescaf\u00E9','kenco','douwe egberts','dallmayr','tchibo','melitta','segafredo','marcilla','bonka','saimaza','twinings','pg tips','yorkshire tea','tetley','teekanne','hornimans','cola cao','colacao','nesquik','drinking chocolate','malted drink','filterkaffee','kaffeefilter','kaffeepads','instantkaffee','l\u00F6slicher kaffee','espressobohnen','fr\u00FCchtetee','pfefferminztee','kamillentee','fencheltee','rooibostee','teebeutel','trinkschokolade','descafeinado','caf\u00E9 en grano','caf\u00E9 soluble','c\u00E1psulas de caf\u00E9','infusiones','poleo','poleo menta','tila','t\u00E9 negro','t\u00E9 rojo','cacao en polvo']],
+['Wine, Beer & Spirits',['cerveza en lata','can of beer','cans of beer','can of lager','cans of lager','kr\u00E4uterlik\u00F6r','cocktail mix','pinot grigio','pinot noir','pinot','chardonnay','merlot','rioja','sauvignon blanc','sauvignon','cabernet','riesling','port','sherry','cognac','bourbon','scotch','baileys','limoncello','amaretto','martini','hard seltzer','radler','pils','pilsner','guinness','heineken','corona','estrella','san miguel','bitters','angostura','absinthe','schnapps','grappa','ouzo','mezcal','malbec','shiraz','syrah','tempranillo','ribera del duero','albari\u00F1o','verdejo','garnacha','grenache','zinfandel','chianti','barolo','bordeaux','burgundy','chablis','sancerre','beaujolais','moscato','lambrusco','gew\u00FCrztraminer','gr\u00FCner veltliner','sp\u00E4tburgunder','wei\u00DFburgunder','grauburgunder','dornfelder','m\u00FCller-thurgau','silvaner','gl\u00FChwein','weizen','weizenbier','wei\u00DFbier','hefeweizen','k\u00F6lsch','altbier','helles','dunkel','bock','alkoholfrei','alkoholfreies bier','becks','beck\'s','warsteiner','bitburger','krombacher','erdinger','paulaner','augustiner','franziskaner','veltins','jever','flensburger','mahou','cruzcampo','alhambra','estrella damm','estrella galicia','amstel','stella artois','budweiser','carlsberg','peroni','moretti','asahi','leffe','hoegaarden','duvel','desperados','coors','kronenbourg','pale ale','porter','shandy','tinto de verano','txakoli','oloroso','pedro ximenez','moscatel','hierbas mallorquinas','hierbas ibicencas','licor 43','pachar\u00E1n','orujo','an\u00EDs','jerez','cointreau','triple sec','grand marnier','kahlua','malibu','j\u00E4germeister','jagermeister','sambuca','pernod','pastis','pimms','pimm\'s','jack daniels','jack daniel\'s','jim beam','johnnie walker','jameson','bacardi','havana club','captain morgan','smirnoff','absolut','gordons','gordon\'s','tanqueray','bombay sapphire','hendricks','hendrick\'s','beefeater','larios','gin mare','xoriguer','aperitif','spirits','alcopop','cinzano','lillet','cr\u00E9mant','cremant','asti','spumante','rotk\u00E4ppchen','bubbly','rosado','vino rosado','vino de mesa','alcohol-free beer','non-alcoholic beer','alcohol free beer','alcohol-free wine','craft beer','wheat beer','six pack','kiste bier','kasten bier','weinschorle','aperol spritz','spritz','sparkling wine','mulled wine','cerveza sin alcohol','cervezas','tinto','vino tinto crianza','cava brut']],
+['Ready-Made & Convenience',['pepperoni pizza','cream of mushroom soup','sweet and sour chicken','quiche','stew','dip','dips','burrito','burritos','samosa','samosas','tapas','paella','gazpacho','salmorejo','meal deal','pasty','pasties','pakora','bhaji','onion bhaji','curry','falafel','guacamole','spring rolls','sausage roll','sausage rolls','pork pie','pork pies','scotch egg','scotch eggs','salad bowl','pasta salad','noodle pot','pot noodle','cup noodles','microwave rice','mac and cheese','macaroni cheese','chilli con carne','chili con carne','rotisserie chicken','tv dinner','moussaka','shepherds pie','shepherd\'s pie','cottage pie','toad in the hole','sandwich filler','salad pot','snack pot','poke bowl','onigiri','dim sum','meal kit','stir fry kit','fajita kit','taco kit','pizza kit','burrito kit','enchilada kit','baba ganoush','mezze','party food','canapes','canap\u00E9s','vol au vents','blinis','chicken soup','tomato soup','fresh soup','ensaladilla','ensaladilla rusa','ensalada preparada','croquetas','empanadas','coca de tramp\u00F3','cocarrois','panades','tumbet','frito mallorqu\u00EDn','bocadillo','bocadillos','bocata','pinchos','pintxos','crema de verduras','crema de calabaza','crema de calabac\u00EDn','pur\u00E9 de patatas','caldo de pollo preparado','lasa\u00F1a','canelones','pizza fresca','platos preparados','maultaschen','kn\u00F6del','semmelkn\u00F6del','kartoffelkn\u00F6del','kartoffelsalat','nudelsalat','fleischsalat','wurstsalat','krautsalat','currywurst','leberk\u00E4se','fertigsalat','belegte br\u00F6tchen','pinsa','flammkuchen','d\u00F6ner','kartoffelpuffer','reibekuchen','eintopf','linseneintopf','erbseneintopf','gulaschsuppe','dosensuppe','ravioli dose','fertigsuppe','suppe','tomatensuppe','h\u00FChnersuppe']],
+['Special Diet & Health',['protein shake','sweetener','stevia','zinc','iron tablets','melatonin','multivitamin','multivitamins','creatine','psyllium','fish oil','cod liver oil','omega 3','b12','folic acid','calcium','biotin','echinacea','ginseng','spirulina','glucosamine','berocca','effervescent','rehydration','dioralyte','meal replacement','huel','slimfast','sugar substitute','xylitol','erythritol','saccharin','canderel','splenda','sacarina','edulcorante','s\u00FC\u00DFstoff','dairy free','nut free','wheat free','vegan protein','energy gel','royal jelly','vitamin c','vitamin d','vitamin tablets','fibre supplement','magnesium tablets','eiwei\u00DFpulver','vitamintabletten','brausetabletten','magnesiumtabletten','nahrungserg\u00E4nzungsmittel','complementos','multivitaminas']],
+['Produce',['baby sweetcorn','baby aubergines','lemon wedges','lime wedges','roast potatoes','cocktail tomatoes','cocktail onions','blackberry','blackberries','cranberry','cranberries','satsuma','satsumas','rhubarb','parsnip','swede','celeriac','kohlrabi','okra','pak choi','endive','chicory','radicchio','watercress','mangetout','pea','jalapeno','jalape\u00F1o','horseradish','sprout','plantain','cress','cantaloupe','yam','quince','gooseberry','gooseberries','redcurrant','redcurrants','blackcurrant','blackcurrants','prune','prunes','beansprout','beansprouts','microgreens','physalis','dragon fruit','guava','cavolo nero','spring greens','collard greens','greens','gem lettuce','little gem','lollo rosso','pea shoots','samphire','daikon','mooli','cassava','tomatillo','scotch bonnet','habanero','padron peppers','vine tomatoes','plum tomatoes','beef tomatoes','salad tomatoes','cherry tomatoes','shiitake','portobello','chanterelle','oyster mushroom','oyster mushrooms','enoki','garlic clove','garlic bulb','mixed peppers','stir fry vegetables','stir fry veg','soup vegetables','salad bag','bagged salad','fruit salad','galia','honeydew','citrus','kumquat','pomelo','sharon fruit','kaki','baby spinach','baby carrots','baby corn','baby potatoes','baby leaf','baby tomatoes','baby leeks','baby gem','lambs lettuce','lamb\'s lettuce','broad beans','runner beans','string beans','french beans','butternut squash','sugar snap peas','sugar snaps','spring onions','sweet potatoes','new potatoes','baking potatoes','jacket potatoes','red onions','white onions','red cabbage','white cabbage','savoy cabbage','savoy','iceberg','iceberg lettuce','corn on the cob','salad leaves','mixed salad','mixed leaves','celery sticks','blood oranges','easy peelers','red grapes','green grapes','seedless grapes','green apples','red apples','fr\u00FChlingszwiebeln','lauchzwiebeln','s\u00FC\u00DFkartoffeln','rosenkohl','wei\u00DFkohl','wirsing','spitzkohl','chinakohl','feldsalat','rucola','eisbergsalat','kopfsalat','romanasalat','radieschen','rettich','rote bete','sellerie','staudensellerie','knollensellerie','porree','fenchel','spargel','zucchini','aubergine','auberginen','erbsen','gr\u00FCne bohnen','zuckerschoten','mais','maiskolben','pastinaken','k\u00FCrbis','hokkaido','mandarinen','clementinen','limetten','pflaumen','zwetschgen','pfirsiche','aprikosen','nektarinen','wassermelone','honigmelone','ananas','weintrauben','johannisbeeren','stachelbeeren','brombeeren','heidelbeeren','preiselbeeren','rhabarber','feigen','datteln','granatapfel','bananen','birne','suppengr\u00FCn','suppengem\u00FCse','salatgurke','cherrytomaten','rispentomaten','strauchtomaten','kr\u00E4uterseitlinge','pfifferlinge','sprossen','kresse','jud\u00EDas verdes','guisantes','ma\u00EDz','puerros','apio','boniato','batata','r\u00E1banos','remolacha','alcachofas','esp\u00E1rragos','esp\u00E1rragos trigueros','acelgas','endivias','escarola','can\u00F3nigos','r\u00FAcula','berros','col lombarda','coles de bruselas','calabacines','berenjenas','pepinos','tomates cherry','tomate de ramallet','tomates de ensalada','cebolla tierna','cebolletas','ajos','ajos tiernos','habas','tirabeques','nabo','chiriv\u00EDa','mandarinas','clementinas','limas','melocotones','nectarinas','albaricoques','ciruelas','paraguayos','n\u00EDsperos','caquis','granada','kiwis','mango','papaya','chirimoya','moras','grosellas','uva','pl\u00E1tano de canarias','manzana golden','manzana fuji','fruta de temporada','brotes de soja','germinados','hierbas frescas']],
+['Bread & Bakery',['kr\u00E4uterbaguette','corn tortillas','loaf','crumpet','crumpets','breadstick','breadsticks','grissini','crispbread','ryvita','rusk','rusks','pitta','pitta bread','chapati','chapatis','roti','paratha','taco','tacos','taco shells','dough','pizza dough','pizza base','pizza bases','puff pastry','filo pastry','shortcrust pastry','pastry sheets','pain au chocolat','panettone','stollen','teacake','teacakes','malt loaf','fruit loaf','soda bread','garlic bread','garlic baguette','english muffins','hot dog buns','hot dog rolls','bun','bap','baps','tiger bread','bloomer','farmhouse loaf','wholemeal bread','wholegrain bread','multigrain bread','granary bread','seeded bread','white bread','brown bread','sandwich bread','cornbread','lavash','bao buns','cinnamon rolls','cinnamon buns','danish pastry','danish pastries','kn\u00E4ckebrot','zwieback','laugenbr\u00F6tchen','laugenbrezel','laugenstange','k\u00F6rnerbr\u00F6tchen','mischbrot','bauernbrot','roggenbrot','wei\u00DFbrot','schwarzbrot','dinkelbrot','aufbackbr\u00F6tchen','fladenbrot','hefezopf','croissants','brioche','pan de pueblo','pan pay\u00E9s','pan moreno','llonguet','llonguets','pan bimbo','bimbo','pan tostado','biscotes','picos','colines','rosquilletas','pan de hamburguesa','pan de perrito','pan de pita','chapata','hogaza','molletes','napolitanas','masa de pizza','masa de hojaldre','hojaldre','masa quebrada','obleas','tortillas de trigo']],
+['Breakfast Foods',['cheerios','special k','bran flakes','shreddies','coco pops','frosties','crepes','cr\u00EApes','rice krispies','corn flakes','breakfast biscuits','pop tarts','belvita','alpen','kelloggs','kellogg\'s','all bran','froot loops','lucky charms','shredded wheat','ready brek','instant oats','rolled oats','steel cut oats','oat flakes','bircher','chocapic','smacks','crunchy nut','choco krispies','breakfast cereal','haferbrei','schokom\u00FCsli','knusperm\u00FCsli','fr\u00FCchtem\u00FCsli','fr\u00FChst\u00FCcksflocken','cornflakes','copos de ma\u00EDz','crema de avena']],
+['Rice, Pasta, Grains & Legumes',['arroz para paella','paella rice','arborio rice','long grain rice','orzo','rigatoni','farfalle','tortellini','tortelloni','ravioli','cannelloni','vermicelli','buckwheat','millet','spelt','freekeh','semolina','split peas','yellow split peas','black-eyed peas','black eyed peas','chick peas','tapioca','oat bran','wheat germ','flaxseed','egg noodles','rice noodles','glass noodles','sushi rice','butter beans','conchiglie','pappardelle','fettuccine','bucatini','angel hair','pasta shapes','pasta shells','pasta bows','pasta twists','rotini','ziti','orecchiette','wholewheat pasta','lasagne sheets','lasagna sheets','fresh pasta','bomba rice','carnaroli','arborio','pudding rice','sticky rice','black rice','wild rice','brown rice','rice pouches','pilau rice','pad thai noodles','chow mein noodles','shirataki','amaranth','wheat berries','bulgur wheat','cracked wheat','giant couscous','pearl couscous','grits','borlotti','flageolet','adzuki','fava beans','lima beans','navy beans','cannellini','pinto beans','haricot beans','mung beans','garbanzo','garbanzo beans','dal','dhal','daal','chana dal','soup mix','dried beans','dried lentils','soybeans','soya beans','sp\u00E4tzle','schupfnudeln','glasnudeln','mie nudeln','reisnudeln','vollkornnudeln','bandnudeln','suppennudeln','spaghetti','tagliatelle','basmatireis','langkornreis','milchreis','risottoreis','vollkornreis','rote linsen','tellerlinsen','berglinsen','wei\u00DFe bohnen','dinkel','hirse','buchweizen','gr\u00FCnkern','arroz bomba','arroz redondo','arroz largo','arroz integral','arroz basmati','tallarines','macarrones','lacitos','pasta integral','placas de lasa\u00F1a','judiones','fabes','pochas','soja texturizada','quinoa']],
+['Pantry Staples',['kr\u00E4utersalz','corn flour','cornmeal','food colouring','food coloring','sprinkles','icing','marzipan','pectin','clove','cloves','cardamom','caraway','star anise','saffron','allspice','garam masala','sesame seeds','poppy seeds','sunflower seeds','pumpkin seeds','mixed seeds','hemp seeds','nigella seeds','cumin seeds','coriander seeds','fennel seeds','mustard seeds','chia seeds','seeds','linseed','panko','croutons','stuffing','stuffing mix','agar','instant mash','suet','frosting','breading','gravy','gravy granules','bisto','oxo','knorr','maggi','stock pots','bovril','celery salt','garlic salt','seasoned salt','flaky salt','maldon','himalayan salt','pink salt','kosher salt','ground pepper','white pepper','cayenne pepper','cayenne','salt and pepper','mixed spice','pumpkin spice','ras el hanout','zaatar','za\'atar','sumac','jerk seasoning','cajun','cajun seasoning','chicken seasoning','steak seasoning','bbq rub','tandoori','tikka','masala','fenugreek','mace','juniper berries','pink peppercorns','sichuan pepper','chilli flakes','red pepper flakes','crushed chillies','chipotle','chili powder','chilli powder','smoked paprika','garlic powder','onion powder','ground ginger','ginger powder','ground coriander','ground cumin','ground turmeric','dried oregano','dried basil','dried thyme','dried parsley','dried rosemary','dried mint','dried herbs','mixed herbs','herbes de provence','italian seasoning','italian herbs','chicken stock','beef stock','vegetable stock','fish stock','chicken broth','beef broth','vegetable broth','bone broth','chicken stock cubes','beef stock cubes','vegetable stock cubes','baking chocolate','cooking chocolate','chocolate chips','cocoa powder','custard powder','cake mix','brownie mix','bread mix','scone mix','muffin mix','cookie mix','batter mix','yorkshire pudding mix','cake decorations','fondant','royal icing','writing icing','glace cherries','candied peel','mixed peel','mincemeat','ground almonds','flaked almonds','almond flakes','chopped nuts','pine nuts','pine kernels','desiccated coconut','coconut flakes','milk powder','powdered milk','dried milk','xanthan gum','arrowroot','tapioca flour','rice flour','gram flour','chickpea flour','spelt flour','rye flour','oat flour','coconut flour','almond flour','00 flour','pasta flour','strong flour','cake flour','self-raising flour','plain flour','wholemeal flour','corn starch','potato starch','cream of tartar','bicarbonate of soda','bicarb','citric acid','glucose syrup','corn syrup','gelatine sheets','leaf gelatine','vanilla extract','vanilla pods','vanilla essence','almond extract','rose water','rosewater','orange blossom water','lemon zest','coconut sugar','cane sugar','sugar cubes','caster sugar','demerara sugar','powdered sugar','granulated sugar','jam sugar','golden breadcrumbs','dashi','bonito flakes','kombu','wakame','nori','seaweed','dried mushrooms','porcini','dried porcini','dried chillies','yeast extract','taco seasoning','fajita seasoning','puderzucker','rohrzucker','brauner zucker','gelierzucker','hagelzucker','kandis','natron','backaroma','rumaroma','tortenguss','sahnesteif','vanillinzucker','puddingpulver','weizengrie\u00DF','hartweizengrie\u00DF','dinkelmehl','roggenmehl','vollkornmehl','weizenmehl','kartoffelst\u00E4rke','maisst\u00E4rke','semmelbr\u00F6sel','k\u00FCmmel','majoran','muskat','muskatnuss','nelken','lorbeer','lorbeerbl\u00E4tter','wacholder','piment','kurkuma','kreuzk\u00FCmmel','paprikapulver','currypulver','chilipulver','cayennepfeffer','pfefferk\u00F6rner','meersalz','jodsalz','br\u00FChw\u00FCrfel','h\u00FChnerbr\u00FChe','rinderbr\u00FChe','bratenso\u00DFe','so\u00DFenbinder','kokosraspel','gemahlene mandeln','mandelbl\u00E4ttchen','sultaninen','korinthen','zitronat','orangeat','kuvert\u00FCre','schokostreusel','zuckerstreusel','backoblaten','sesam','leinsamen','chiasamen','sonnenblumenkerne','k\u00FCrbiskerne','pinienkerne','mohn','trockenhefe','frischhefe','\u00F1ora','azafr\u00E1n','colorante','colorante alimentario','laurel','clavo','nuez moscada','or\u00E9gano','guindilla','cayena','pimienta negra','pimienta blanca','sal gorda','sal fina','sal marina','az\u00FAcar moreno','az\u00FAcar glas','harina de fuerza','harina integral','harina de ma\u00EDz','harina de garbanzo','levadura fresca','levadura qu\u00EDmica','levadura royal','gasificante','gelatina neutra','vainilla','esencia de vainilla','chocolate para postres','chocolate de cobertura','pi\u00F1ones','almendra molida','coco rallado','caldo de pollo','caldo de verduras','caldo de carne','caldo de pescado','avecrem','ajo en polvo','cebolla en polvo','s\u00E9samo','semillas de ch\u00EDa','semillas de lino','pipas de calabaza']],
+['Snacks',['potato chips','potato crisps','corn chips','water crackers','salt and vinegar crisps','cheese and onion crisps','prawn cocktail crisps','pringles','doritos','hazelnut','hazelnuts','flapjack','flapjacks','seaweed snacks','dried cranberries','dried mango','dried apricots','dried figs','dried apple','dried dates','dried banana','oatcakes','wasabi peas','sultanas','chestnuts','sunflower kernels','beef jerky','pork scratchings','pork rinds','biltong','rice crackers','granola bars','granola bar','cereal bars','cereal bar','muesli bars','muesli bar','oat bars','fruit bars','protein bars','protein balls','energy balls','cheese puffs','corn nuts','banana chips','fruit snacks','fruit leather','lays','lay\'s','kettle chips','quavers','wotsits','monster munch','hula hoops','cheetos','ruffles','tostitos','takis','ritz','tuc','cream crackers','water biscuits','mini cheddars','twiglets','bombay mix','poppadoms','papadums','prawn crackers','monkey nuts','nut mix','fruit and nut','cashew nuts','pecan nuts','brazil nuts','macadamia','macadamia nuts','tiger nuts','crisp','snack','snacks','nibbles','kind bars','nakd','nature valley','salzstangen','erdnussflips','salzbrezeln','nussmischung','haseln\u00FCsse','paran\u00FCsse','pistazien','reiswaffeln','maiswaffeln','m\u00FCsliriegel','proteinriegel','kartoffelchips','tortillachips','knabberzeug','kikos','pipas','pipas de girasol','gusanitos','cortezas','patatas chips','avellanas','orejones','ciruelas pasas','higos secos','d\u00E1tiles','barritas','barritas de cereales','barritas energ\u00E9ticas','tortitas de arroz','tortitas de ma\u00EDz','banderillas','altramuces','chufas']],
+['Sweets & Desserts',['crema pastelera','mint chocolate','chocolate mints','glacier mints','after dinner mints','peppermints','breath mints','mint humbugs','ginger biscuits','ginger nuts','custard creams','bourbon creams','lebkuchen','toffee','toffees','fudge','caramel','caramels','liquorice','licorice','lollipop','lollipops','lollies','chewing gum','bubble gum','gum','jelly','jello','jelly beans','jelly babies','shortbread','digestives','digestive biscuits','macaron','macarons','macaroon','macaroons','meringue','meringues','cheesecake','eclair','eclairs','profiterole','profiteroles','trifle','panna cotta','m&ms','m&m','snickers','mars bar','mars','twix','kitkat','kit kat','toblerone','lindt','milka','ferrero rocher','ferrero','raffaello','after eight','smarties','skittles','maltesers','bounty','nougat','praline','pralines','truffle','truffles','advent calendar','honeycomb','biscotti','amaretti','stroopwafel','stroopwafels','gingerbread','yule log','tic tac','tic tacs','werthers','polo mints','swiss roll','jam tarts','jam tart','mince pie','mince pies','apple pie','cherry pie','lemon tart','lemon meringue pie','apple crumble','apple strudel','strudel','carrot cake','lemon cake','banana bread','fruit cake','birthday cake','sponge cake','cream cake','cream cakes','christmas pudding','creme brulee','cr\u00E8me br\u00FBl\u00E9e','creme caramel','cr\u00E8me caramel','easter egg','chocolate egg','kinder egg','kinder surprise','kinder bueno','cadbury','cadburys','dairy milk','milk chocolate','dark chocolate','white chocolate','chocolate buttons','chocolate biscuits','chocolate cake','hot cross buns','quality street','mon cheri','ritter sport','hanuta','knoppers','toffifee','storck','katjes','trolli','maoam','mentos','fruittella','chupa chups','starburst','wine gums','fruit pastilles','fruit gums','liquorice allsorts','sherbet','pick and mix','boiled sweets','hard candy','candy floss','cotton candy','candy canes','turkish delight','halva','baklava','angel delight','cookie dough','ice cream cones','torrijas','bu\u00F1uelos','rosquillas','polvorones','mantecados','rosc\u00F3n','rosc\u00F3n de reyes','mazap\u00E1n','peladillas','chocolate a la taza','bombones','chocolatinas','huesitos','lacasitos','conguitos','filipinos','chips ahoy','tosta rica','galletas mar\u00EDa','campurrianas','palmeras','palmeritas','sobaos','quesada','tarta de queso','tarta de santiago','brazo de gitano','gat\u00F3','crespells','robiols','rubiols','coca de patata','arroz con leche','crema catalana','copa de chocolate','chicles','piruletas','regaliz','gelatina','fruchtgummi','weingummi','lakritz','lakritze','schokoriegel','pralinen','vollmilchschokolade','zartbitter','zartbitterschokolade','wei\u00DFe schokolade','dominosteine','spekulatius','zimtsterne','christstollen','printen','baumkuchen','berliner','krapfen','amerikaner','streuselkuchen','k\u00E4sekuchen','apfelkuchen','apfelstrudel','donauwelle','bienenstich','tortenboden','biskuit','l\u00F6ffelbiskuit','butterkeks','butterkekse','leibniz','prinzenrolle','eiswaffeln','schokok\u00FCsse','milchschnitte','grie\u00DFpudding','rote gr\u00FCtze','g\u00F6tterspeise','wackelpudding','mousse au chocolat','kaugummi','kaugummis','lutscher','lollis','pfefferminz','traubenzucker','schokolinsen','s\u00FC\u00DFigkeiten','nachspeise']]
+];
+(function(){
+  for(var i=0;i<KX.length;i++){
+    for(var k=0;k<KR.length;k++){
+      if(KR[k][0]===KX[i][0]){KR[k][1]=KR[k][1].concat(KX[i][1]);break;}
+    }
+  }
+})();
+// Precompute match plan once: phrases + longer non-ASCII words first (longest first),
+// then single ASCII words in category priority order.
+var _P1=[],_P2=[];
+(function(){
+  for(var i=0;i<KR.length;i++){
+    var kws=KR[i][1];
+    for(var j=0;j<kws.length;j++){
+      var kw=kws[j];
+      var nonAscii=/[^\x00-\x7F]/.test(kw);
+      if(kw.indexOf(' ')>-1||(nonAscii&&kw.length>=3)){_P1.push([kw,KR[i][0],nonAscii]);}
+      else{_P2.push([kw,KR[i][0],nonAscii]);}
+    }
+  }
+  _P1.sort(function(a,b){return b[0].length-a[0].length;});
+})();
+function _norm(t){
+  return String(t).toLowerCase().replace(/[\u2019'`\u00B4]/g,"'").replace(/[.,;:!?()\[\]"]/g,' ').replace(/\s+/g,' ').trim();
+}
+function _hit(lower,e){
+  var kw=e[0];
+  if(e[2])return lower.indexOf(kw)>=0;
+  if(!e[3]){
+    var escaped=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    // word boundary that also tolerates simple plurals: apple / apples / tomatoes
+    e[3]=new RegExp('(^|[^a-z0-9])'+escaped+'(s|es)?($|[^a-z0-9])'); // built once per keyword, then reused
+  }
+  return e[3].test(lower);
+}
+// Whole-entry exceptions (a plural that would otherwise match an earlier section)
+var _EX={'mints':'Sweets & Desserts','crema':'Personal Care','spread':'Chilled & Dairy','pur\u00E9':'Ready-Made & Convenience'};
+function classify(text){
+  var lower=_norm(text);
+  if(!lower)return "Other";
+  if(_EX.hasOwnProperty(lower))return _EX[lower];
+  // "frozen ..." and "canned/tinned ..." decide the section whatever the food is
+  // (pet food stays with Pet; "Eis" is German for ice cream and would otherwise match "Ei", egg)
+  if(!/(^| )(dog|cat|pet|puppy|kitten)( |$)/.test(lower)){
+    if(/(^| )(frozen|congelad[oa]s?|eis)( |$)/.test(lower))return "Frozen Foods";
+    if(/(^| )(canned|tinned)( |$)/.test(lower))return "Canned & Preserved Goods";
+  }
+  for(var i=0;i<_P1.length;i++){if(_hit(lower,_P1[i]))return _P1[i][1];}
+  for(var j=0;j<_P2.length;j++){if(_hit(lower,_P2[j]))return _P2[j][1];}
+  return "Other";
+}
+// ─── STATE (marker used by the vocabulary checks)
+
+// ---- The list ----
+var shop=[];          // every item: {id,text,category,qty,photo,done}
+var tab='shopping';
+var photo=null;       // a photo waiting for its item
+var canPush=false;    // the online backup may be overwritten: it has been read, or this phone has its own list
+var lastRaw=null;     // the stored list exactly as this page last read or wrote it
+var uid=0;
+var anim={};          // items showing their tick animation
+var OLD_APP_V='1789731934'; // the stamp of the previous app, which empties the list when it finds a different one
+function nid(){return ++uid;}
+function fixUid(){var mx=0;for(var i=0;i<shop.length;i++){if(shop[i].id>mx)mx=shop[i].id;}if(mx>uid)uid=mx;}
+function find(id){for(var i=0;i<shop.length;i++){if(shop[i].id===id)return shop[i];}return null;}
+function clean(arr){
+  // Make any stored or restored list safe to use: real items only, each with its own numeric id
+  var out=[],seen={},mx=uid,i;
+  for(i=0;i<arr.length;i++){
+    var it=arr[i];
+    if(!it||typeof it!=='object'||!it.text)continue;
+    it.text=String(it.text);it.done=!!it.done;
+    if(!it.category)it.category='Other';
+    if(!(it.qty>0))it.qty=1;
+    if(typeof it.photo!=='string')it.photo=null;
+    if(typeof it.id!=='number'||!(it.id>0)||seen[it.id]){it.id=0;}else{seen[it.id]=true;if(it.id>mx)mx=it.id;}
+    out.push(it);
+  }
+  for(i=0;i<out.length;i++){if(!out[i].id)out[i].id=++mx;}
+  return out;
+}
+function noPhotos(){
+  var out=[];
+  for(var i=0;i<shop.length;i++){var c={};for(var k in shop[i]){if(k!=='photo')c[k]=shop[i][k];}out.push(c);}
+  return out;
+}
+var fullWarned=false;
+function saveLocal(){
+  var s=JSON.stringify(shop);
+  try{localStorage.setItem('sl3_s',s);lastRaw=s;return;}catch(e){}
+  // Phone storage is full (photos): keep the list itself, without the photos
+  try{
+    s=JSON.stringify(noPhotos());
+    localStorage.setItem('sl3_s',s);lastRaw=s;
+    if(!fullWarned){fullWarned=true;toast('Phone storage is full - photos are not saved');}
+  }catch(e2){}
+}
+function pushCloud(){
+  if(!fbUp||!canPush)return;
+  try{db.ref('devices/'+devId+'/shopping').set(noPhotos());}catch(e){}
+}
+function sv(){saveLocal();pushCloud();}
+function syncFromPhone(){
+  // The previous app (same phone, same storage) or another tab may have changed the list since this
+  // page last looked. Take the stored list over before doing anything with it. True if it changed.
+  var raw=null;
+  try{raw=localStorage.getItem('sl3_s');}catch(e){return false;}
+  if(raw===null||raw===lastRaw)return false;
+  try{
+    var b=JSON.parse(raw);
+    if(b&&typeof b.length==='number'){shop=clean(b);fixUid();lastRaw=raw;return true;}
+  }catch(e){}
+  return false;
+}
+
+function ld(){
+  // The list on this phone is the master copy. The online copy is only a backup: it is used
+  // when this phone has no list of its own, and never overwrites a list that is here.
+  var hadLocal=false,waiting=false;
+  try{
+    var raw=localStorage.getItem('sl3_s');
+    var b=JSON.parse(raw);
+    if(b&&typeof b.length==='number'){shop=clean(b);hadLocal=true;lastRaw=raw;}
+  }catch(e){}
+  fixUid();
+  try{
+    // If the previous app has never run on this phone it would empty the list on its first start
+    if(localStorage.getItem('sl3_ver')===null)localStorage.setItem('sl3_ver',OLD_APP_V);
+    waiting=localStorage.getItem('sl3_wait')==='1';
+  }catch(e){}
+  if(!fbUp)return;
+  if(hadLocal&&!waiting){canPush=true;pushCloud();return;}
+  // No list of its own yet: fetch the backup first. Until it has been read, nothing is written over it,
+  // however long that takes; the mark below survives closing the page.
+  try{localStorage.setItem('sl3_wait','1');}catch(e){}
+  try{
+    db.ref('devices/'+devId+'/shopping').once('value',function(snap){mergeBackup(snap.val());},function(){});
+  }catch(e){}
+}
+function mergeBackup(d){
+  if(canPush)return;
+  syncFromPhone();
+  if(d&&typeof d.length==='number'&&d.length){
+    // restored items first; anything added on this phone in the meantime is kept after them
+    var mine=shop;
+    shop=clean(d);
+    for(var i=0;i<shop.length;i++)shop[i].photo=null;
+    fixUid();
+    for(var j=0;j<mine.length;j++){mine[j].id=nid();shop.push(mine[j]);}
+  }
+  canPush=true;
+  try{localStorage.removeItem('sl3_wait');}catch(e){}
+  sv();R();
+}
+
+// ---- Lists sent from the other phone ----
+var lastInboxTime=0;
+function norm(s){return String(s).toLowerCase().replace(/\s+/g,' ').replace(/^ | $/g,'');}
+function applyInbox(d){
+  if(!d||!d.items||!d.items.length)return;
+  if(d.time&&d.time===lastInboxTime)return; // the same delivery arriving twice
+  if(d.time)lastInboxTime=d.time;
+  syncFromPhone();
+  // The sender always sends the whole list: skip what is already waiting on this list
+  var have={};
+  for(var h=0;h<shop.length;h++){if(!shop[h].done)have[norm(shop[h].text)]=true;}
+  var count=0;
+  for(var i=0;i<d.items.length;i++){
+    var it=d.items[i];
+    if(!it||!it.text)continue;
+    if(have[norm(it.text)])continue;
+    shop.push({id:nid(),text:String(it.text),category:it.category||classify(it.text),qty:it.qty||1,photo:null,done:false});
+    count++;
+  }
+  if(fbUp){try{db.ref('inbox/'+devId).remove();}catch(e){}}
+  if(count>0){tab='shopping';sv();R();toast(count+(count===1?' item received':' items received'));}
+  else{toast('Nothing new received');}
+}
+function listenInbox(){
+  if(!fbUp)return;
+  try{
+    db.ref('inbox/'+devId).on('value',function(snap){
+      var d=snap.val();
+      if(!d)return;
+      applyInbox(d);
+    });
+    db.ref('.info/connected').on('value',function(snap){online=snap.val()===true;renderHead();});
+  }catch(e){}
+}
+function getTarget(){try{return localStorage.getItem('sl3_target')||'';}catch(e){return '';}}
+function setupSend(){
+  closeSend();
+  var d=document.createElement('div');d.className='sheet';d.id='sendOv';
+  d.innerHTML='<div class="sheet-hd"><div class="sheet-ti">Send to R</div><button class="sheet-x" onclick="closeSend()" aria-label="Close">&times;</button></div>'
+  +'<div class="sheet-body">'
+  +'<div class="card"><div class="card-n">Your ID</div><div class="bigid">'+esc(devId)+'</div>'
+  +'<div class="card-p" style="margin:0">Give this ID to the person who should be able to send you their list.</div></div>'
+  +'<div class="card"><div class="card-n">Receiver\'s ID</div>'
+  +'<div class="card-p">Enter the ID shown on the phone that should receive your list.</div>'
+  +'<input type="text" class="idin" id="targetInput" value="'+esc(getTarget())+'" placeholder="ABC123" autocomplete="off" autocapitalize="characters" maxlength="6">'
+  +'<button class="stb" style="width:100%;justify-content:center" onclick="saveTarget()">Save</button>'
+  +'</div></div>';
+  document.body.appendChild(d);
+}
+function closeSend(){gone(document.getElementById('sendOv'));}
+function saveTarget(){
+  var i=document.getElementById('targetInput');if(!i)return;
+  var t=String(i.value).replace(/\s+/g,'').toUpperCase();
+  if(t===devId){toast('That is this phone\'s own ID');return;}
+  try{if(t){localStorage.setItem('sl3_target',t);}else{localStorage.removeItem('sl3_target');}}catch(e){}
+  closeSend();R();toast(t?'Saved':'Receiver removed');
+}
+function sendToR(){
+  syncFromPhone();
+  var target=getTarget();
+  if(!target){setupSend();return;}
+  if(!fbUp||!online){toast('No connection - cannot send right now');return;}
+  var out=[];
+  for(var i=0;i<shop.length;i++){if(!shop[i].done)out.push({text:shop[i].text,category:shop[i].category,qty:shop[i].qty||1});}
+  if(!out.length)return;
+  try{
+    db.ref('inbox/'+target).set({items:out,from:devId,time:Date.now()},function(err){
+      toast(err?'Sending failed':(out.length+(out.length===1?' item sent':' items sent')));
+    });
+  }catch(e){toast('Sending failed');}
+}
+// On return from the background: show what the previous app may have changed, and look in the
+// inbox again (iPhone Safari drops the connection in the background)
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible')return;
+  if(syncFromPhone())R();
+  if(fbUp){try{db.ref('inbox/'+devId).once('value',function(s){applyInbox(s.val());});}catch(e){}}
+});
+try{if(window.addEventListener)window.addEventListener('storage',function(){if(syncFromPhone())R();});}catch(e){}
+
+// ---- Drawing the page ----
+var ICON_CHECK='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+var ICON_TRASH='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+var ICON_UNDO='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
+var ICON_SEND='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+var ICON_GEAR='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+
+function setHTML(id,h){var el=document.getElementById(id);if(el)el.innerHTML=h;}
+function split(){
+  // active = still to buy (an item stays visible while its tick animation runs)
+  var o={act:[],luk:[],dn:[]};
+  for(var i=0;i<shop.length;i++){
+    var it=shop[i];
+    if(it.done&&!anim[it.id])o.dn.push(it);
+    else if(it.category==='Lukas')o.luk.push(it);
+    else o.act.push(it);
+  }
+  return o;
+}
+function groups(items){
+  var g={},keys=[],i;
+  for(i=0;i<items.length;i++){var c=items[i].category||'Other';if(!g[c]){g[c]=[];keys.push(c);}g[c].push(items[i]);}
+  keys.sort(function(a,b){var ra=a==='Other'?1:0,rb=b==='Other'?1:0;if(ra!==rb)return ra-rb;return a<b?-1:(a>b?1:0);});
+  var out=[];for(i=0;i<keys.length;i++)out.push({c:keys[i],items:g[keys[i]]});
+  return out;
+}
+function rowActive(it){
+  var on=!!anim[it.id];
+  var h='<div class="it'+(on?' cki':'')+'" onclick="chkOff('+it.id+')"><div class="ci'+(on?' on':'')+'">'+(on?ICON_CHECK:'')+'</div><span class="tx'+(on?' off':'')+'">'+esc(it.text)+'</span>';
+  if(it.qty>1)h+='<span class="qg">&times;'+it.qty+'</span>';
+  if(it.photo)h+='<img class="th" src="'+esc(it.photo)+'" alt="" onclick="showPh('+it.id+',event)">';
+  return h+'</div>';
+}
+function rowDone(it){
+  var h='<div class="it cpl" onclick="unTick('+it.id+')"><div class="ci on">'+ICON_CHECK+'</div><span class="tx off">'+esc(it.text)+'</span>';
+  if(it.qty>1)h+='<span class="qg">&times;'+it.qty+'</span>';
+  return h+'<button class="db" onclick="delShop('+it.id+',event)" aria-label="Delete">'+ICON_TRASH+'</button></div>';
+}
+function renderHead(){
+  var o=split(),nA=o.act.length+o.luk.length,nD=o.dn.length;
+  var hasSR=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+  var t=getTarget();
+  var h='<span class="sync-dot'+(online?' on':'')+'"></span>My ID: <span class="id-code">'+esc(devId)+'</span>';
+  if(t)h+='<span>Sends to: <span class="id-code">'+esc(t)+'</span></span>';
+  h+='<span class="diag">'+BUILD+' &middot; '+(fbUp?(online?'online':'offline'):'no database')+(hasSR?'':' &middot; no voice')+'</span>';
+  setHTML('idbar',h);
+  setHTML('tabs','<button class="tb'+(tab==='shopping'?' a':'')+'" onclick="sTab(\'shopping\')">Shopping'+(nA?' <span class="bg">'+nA+'</span>':'')+'</button>'
+    +'<button class="tb'+(tab==='completed'?' a':'')+'" onclick="sTab(\'completed\')">Completed'+(nD?' <span class="bm">'+nD+'</span>':'')+'</button>');
+}
+function R(){
+  renderHead();
+  var o=split(),h='',i,j,gs;
+  var aa=document.getElementById('addArea');if(aa)aa.style.display=tab==='shopping'?'':'none';
+  var lw=document.getElementById('lukasWrap');if(lw)lw.style.display=tab==='shopping'?'':'none';
+  if(tab==='shopping'){
+    var n=o.act.length+o.luk.length;
+    if(n>0){
+      h+='<div class="sbar">';
+      if(getTarget()){
+        h+='<button class="sndb" onclick="sendToR()">'+ICON_SEND+'Send to R ('+n+')</button><button class="ib" onclick="setupSend()" aria-label="Send settings">'+ICON_GEAR+'</button>';
+      }else{
+        h+='<button class="stb" onclick="setupSend()">'+ICON_SEND+'Set up Send to R</button>';
+      }
+      h+='</div>';
+    }
+    if(o.act.length===0)h+='<div class="em">Your list is empty</div>';
+    gs=groups(o.act);
+    for(i=0;i<gs.length;i++){
+      h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+esc(gs[i].c)+'</span><span class="cc">'+gs[i].items.length+'</span></div>';
+      for(j=0;j<gs[i].items.length;j++)h+=rowActive(gs[i].items[j]);
+      h+='</div>';
+    }
+    if(o.act.length>0)h+='<div class="clrw"><button class="clr" onclick="clearShop()">Clear list</button></div>';
+    setHTML('list',h);
+    var lh='';for(i=0;i<o.luk.length;i++)lh+=rowActive(o.luk[i]);
+    setHTML('lkItems',lh);setHTML('lkCount',String(o.luk.length));
+  }else{
+    if(o.dn.length>0){
+      h+='<div class="rb"><button class="rbtn" onclick="rstAll()">'+ICON_UNDO+'Restore all</button><button class="rbtn dng" onclick="delAllDone()">'+ICON_TRASH+'Delete all</button></div>';
+      h+='<div class="hint">Tap an item to put it back on the list</div>';
+    }else{h+='<div class="em">No completed items</div>';}
+    gs=groups(o.dn);
+    for(i=0;i<gs.length;i++){
+      h+='<div class="cg"><div class="ch"><span class="cd"></span><span class="cn">'+esc(gs[i].c)+'</span></div>';
+      for(j=0;j<gs[i].items.length;j++)h+=rowDone(gs[i].items[j]);
+      h+='</div>';
+    }
+    setHTML('list',h);
+  }
+  var pp=document.getElementById('pp');
+  if(pp)pp.innerHTML=photo?'<div class="pp"><img src="'+esc(photo)+'" alt=""><span>Photo ready - type or say its name</span><button onclick="photo=null;R()" aria-label="Remove photo">&times;</button></div>':'';
+}
+
+// ---- Actions ----
+function sTab(t){tab=t;R();}
+function addItem(text,category,withPhoto){
+  syncFromPhone();
+  var it={id:nid(),text:text,category:category||classify(text),qty:1,photo:withPhoto?photo:null,done:false};
+  if(withPhoto){photo=null;var ph=document.getElementById('phIn');if(ph)ph.value='';}
+  shop.push(it);sv();R();
+  return it;
+}
+function addS(){
+  var mi=document.getElementById('mi');
+  var txt=mi?String(mi.value).replace(/\s+/g,' ').replace(/^ | $/g,''):'';
+  if(!txt)return;
+  if(mi)mi.value='';
+  addItem(txt,null,true);
+}
+function addLukas(){
+  var el=document.getElementById('lmi');
+  var txt=el?String(el.value).replace(/\s+/g,' ').replace(/^ | $/g,''):'';
+  if(!txt)return;
+  if(el)el.value='';
+  addItem(txt,'Lukas',false);
+}
+function chkOff(id){
+  syncFromPhone();
+  var it=find(id);
+  if(!it||it.done)return;
+  it.done=true;anim[id]=true;sv();R(); // saved at once; the row stays for its short animation
+  setTimeout(function(){delete anim[id];R();},350);
+  showUndo('Ticked: '+it.text,function(){var x=find(id);if(x){x.done=false;delete anim[id];sv();R();}});
+}
+function unTick(id){syncFromPhone();var it=find(id);if(!it)return;it.done=false;sv();R();toast('Back on the list: '+it.text);}
+function delShop(id,ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  syncFromPhone();
+  var it=find(id);if(!it)return;
+  var keep=[];for(var i=0;i<shop.length;i++){if(shop[i].id!==id)keep.push(shop[i]);}
+  shop=keep;sv();R();
+  showUndo('Deleted: '+it.text,function(){shop.push(it);sv();R();});
+}
+function clearShop(){
+  syncFromPhone();
+  var removed=[],keep=[];
+  for(var i=0;i<shop.length;i++){if(shop[i].done||shop[i].category==='Lukas')keep.push(shop[i]);else removed.push(shop[i]);}
+  if(!removed.length)return;
+  if(!window.confirm('Clear all '+removed.length+(removed.length===1?' item?':' items?')))return;
+  shop=keep;sv();R();
+  showUndo('Cleared '+removed.length+(removed.length===1?' item':' items'),function(){shop=shop.concat(removed);sv();R();});
+}
+function delAllDone(){
+  syncFromPhone();
+  var removed=[],keep=[];
+  for(var i=0;i<shop.length;i++){if(shop[i].done)removed.push(shop[i]);else keep.push(shop[i]);}
+  if(!removed.length)return;
+  if(!window.confirm('Delete all '+removed.length+' completed'+(removed.length===1?' item?':' items?')))return;
+  shop=keep;sv();R();
+  showUndo('Deleted '+removed.length+(removed.length===1?' item':' items'),function(){shop=shop.concat(removed);sv();R();});
+}
+function rstAll(){syncFromPhone();for(var i=0;i<shop.length;i++)shop[i].done=false;tab='shopping';sv();R();}
+
+// ---- Small messages at the bottom ----
+var toastTm=null;
+function toast(msg,undoFn){
+  gone(document.getElementById('toastEl'));clearTimeout(toastTm);
+  var d=document.createElement('div');d.className='toast';d.id='toastEl';
+  var s=document.createElement('span');s.textContent=msg;d.appendChild(s);
+  if(undoFn){
+    var b=document.createElement('button');b.textContent='Undo';
+    b.onclick=function(){clearTimeout(toastTm);gone(d);undoFn();};
+    d.appendChild(b);
+  }
+  document.body.appendChild(d);
+  toastTm=setTimeout(function(){gone(d);},undoFn?4000:2500);
+}
+function showUndo(msg,fn){toast(msg,fn);}
+
+// ---- Photos (kept on this phone only; too large for the online backup) ----
+function pPh(){var el=document.getElementById('phIn');if(el)el.click();}
+function phPicked(input){
+  var f=input.files&&input.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    shrink(e.target.result,function(small){
+      photo=small;
+      var mi=document.getElementById('mi');
+      if(mi&&String(mi.value).replace(/\s+/g,'')){addS();} // a name is already typed: add it with the photo
+      else{R();}
+    });
+  };
+  r.readAsDataURL(f);
+}
+function shrink(dataURL,cb){
+  var img=new Image();
+  img.onload=function(){
+    var mx=400,w=img.width,h=img.height;
+    if(w>mx||h>mx){if(w>h){h=Math.round(h*mx/w);w=mx;}else{w=Math.round(w*mx/h);h=mx;}}
+    try{
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.6));
+    }catch(e){cb(dataURL);}
+  };
+  img.onerror=function(){cb(dataURL);};
+  img.src=dataURL;
+}
+function showPh(id,ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  var it=find(id);if(!it||!it.photo)return;
+  var d=document.createElement('div');d.className='overlay';d.id='phOv';
+  d.onclick=function(){gone(d);};
+  var im=document.createElement('img');im.src=it.photo;im.alt='';d.appendChild(im);
+  document.body.appendChild(d);
+}
+
+// ---- Voice ----
+// What the phone's own log showed on 12 November 2026 (Safari 27.2): a microphone session opened about
+// 2 seconds after the previous one ended reports "started" within 40 ms and then hears nothing; sessions
+// opened 10 and 34 seconds after the previous one work, and report "started" after 200 ms or more.
+// So: (1) a new session is never opened sooner than V_MIN_GAP after the last one ended - the app shows a
+// short countdown instead; (2) a session that reports "started" suspiciously fast is dropped once and
+// re-opened after a longer pause; (3) every tap and event (no words) is logged to diag/<phone ID>.
+var V_MIN_GAP=6000;       // shortest pause between the end of one session and the start of the next
+var V_FAST_START=100;     // a "started" report sooner than this (not on the first session) is suspect
+var V_SUSPECT_WAIT=10000; // pause before re-opening after a suspect start
+var listening=false,recog=null,vmsg='';
+var vRun=false;           // start() was called and that session has not reported its end
+var vSess=null,vSessions=0,vFail=0,vRetry=0,vLastErr='',vNotBefore=0,vTimer=null,vtm=null;
+var vLog=[],vLogId=0,vT0=Date.now();
+function vlog(s){if(vLog.length<300)vLog.push((Date.now()-vT0)+' '+s);}
+function vFlush(){
+  if(!fbUp||!vLogId||!vLog.length)return;
+  var ua='';try{ua=String(navigator.userAgent||'').slice(0,160);}catch(e){}
+  try{db.ref('diag/'+devId+'/'+vLogId).set({build:BUILD,ua:ua,log:vLog});}catch(e){}
+}
+function vShow(msg,dot){
+  vmsg=msg||'';
+  setHTML('vs',msg?'<div class="vt">'+(dot?'<span class="vd"></span>':'')+esc(msg)+'</div>':'');
+  var b=document.getElementById('micBtn');if(b)b.className='ib'+(listening?' ma':'');
+}
+function showVM(m){vShow(m,false);clearTimeout(vtm);vtm=setTimeout(function(){if(vmsg===m)vShow('',false);},4000);}
+function tgV(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showVM('Voice input is not available in this browser');return;}
+  if(listening){vOff();return;}
+  listening=true;vFail=0;vRetry=0;vLastErr='';
+  vLogId=Date.now();vLog=[];vT0=Date.now();vlog('tap on, build '+BUILD);
+  setTimeout(vFlush,8000); // save the log even if the microphone is never switched off
+  vArm();
+}
+function vOff(){
+  listening=false;vlog('tap off');
+  clearTimeout(vTimer);vTimer=null;
+  if(vSess)clearTimeout(vSess.wd);
+  // stop(), not abort(): the phone finishes the words it has already heard
+  if(vRun&&recog){try{recog.stop();}catch(ex){}}
+  vShow('',false);
+  setTimeout(vFlush,1500);
+}
+function vArm(){
+  // Open a session now, or count down to the moment it is safe to open one
+  clearTimeout(vTimer);vTimer=null;
+  if(!listening)return;
+  if(vRun){
+    // the previous session is still closing; its end calls vArm again. Do not wait for ever.
+    vShow('Starting microphone...',false);
+    var w=vSess;
+    vTimer=setTimeout(function(){
+      if(listening&&vRun&&vSess===w){vlog('old session never ended');vDrop();vNotBefore=Date.now()+V_MIN_GAP;vArm();}
+    },2000);
+    return;
+  }
+  var wait=vNotBefore-Date.now();
+  if(wait>0){
+    vShow('Microphone ready in '+Math.ceil(wait/1000)+' s',false);
+    vTimer=setTimeout(vArm,wait>1000?1000:wait);
+    return;
+  }
+  vShow('Starting microphone...',false);
+  vBegin();
+}
+function vGiveUp(){
+  listening=false;vlog('gave up: '+vLastErr);
+  showVM('Voice stopped'+(vLastErr?' ('+vLastErr+')':'')+' - tap the microphone again');
+  vFlush();
+}
+function vDrop(){
+  // Forget the recognizer completely; the next session gets a new one
+  var o=recog;recog=null;vRun=false;
+  if(o){o.onstart=o.onresult=o.onerror=o.onend=null;try{o.abort();}catch(ex){}}
+}
+function vMake(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  var r=new SR();
+  r.lang='en-US';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+  function note(name){r['on'+name]=function(){if(r!==recog)return;if(vSess)vSess.alive=true;vlog(name);};}
+  note('audiostart');note('soundstart');note('speechstart');note('speechend');note('soundend');note('audioend');note('nomatch');
+  r.onstart=function(){
+    if(r!==recog||!vSess)return;
+    var s=vSess,lat=Date.now()-s.at;
+    s.alive=true;vlog('start +'+lat);
+    if(vSessions>1&&lat<V_FAST_START&&vRetry<1){
+      vRetry++;vlog('suspiciously fast start: dropping it, re-opening after a pause');
+      clearTimeout(s.wd);vDrop();vNotBefore=Date.now()+V_SUSPECT_WAIT;vArm();
+      return;
+    }
+    if(listening)vShow('Listening...',true);
+  };
+  r.onresult=function(e){
+    if(r!==recog||!vSess)return;
+    vSess.alive=true;vSess.got=true;vFail=0;vRetry=0;
+    var last=e.results[e.results.length-1];
+    vlog('result '+(last&&last.isFinal?'final':'draft')+' n'+e.results.length);
+    vSess.res(e);
+  };
+  r.onerror=function(e){
+    if(r!==recog)return;
+    vLastErr=(e&&e.error)||'';vlog('error '+vLastErr);
+    if(vLastErr==='not-allowed'||vLastErr==='service-not-allowed'){
+      listening=false;if(vSess)vSess.denied=true;
+      showVM('The microphone is not allowed for this page');
+    }
+  };
+  r.onend=function(){
+    if(r!==recog)return;
+    vlog('end');vRun=false;vNotBefore=Date.now()+V_MIN_GAP;
+    var s=vSess;
+    if(s){clearTimeout(s.wd);s.flush();} // words heard but not yet turned into an item are kept
+    if(!listening){
+      if(!(s&&s.denied))vShow('',false); // keep the "not allowed" message on screen
+      else{var b=document.getElementById('micBtn');if(b)b.className='ib';}
+      vFlush();return;
+    }
+    // A session that dies at once without hearing anything, several times in a row, means the
+    // microphone is not really working: say so instead of pretending to listen.
+    if(s&&!s.got&&(Date.now()-s.at)<1500){vFail++;}else{vFail=0;}
+    if(vFail>=3){vGiveUp();return;}
+    vArm();
+  };
+  return r;
+}
+function vBegin(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR||!listening||vRun)return;
+  if(!recog)recog=vMake();
+  var r=recog;
+  var s={at:Date.now(),got:false,alive:false,denied:false,wd:null,res:null,flush:null};
+  vWords(s);
+  vSess=s;vSessions++;
+  try{r.start();vRun=true;vlog('start() called, session '+vSessions);}
+  catch(ex){
+    vlog('start() threw '+String((ex&&ex.name)||ex));vLastErr='could not start';
+    vFail++;vDrop();vNotBefore=Date.now()+V_MIN_GAP;
+    if(vFail>=3){vGiveUp();return;}
+    vArm();
+    return;
+  }
+  // The phone sometimes accepts start() and then reports nothing at all: do not wait for ever
+  s.wd=setTimeout(function(){
+    if(vSess!==s||s.alive||!listening)return;
+    vlog('no sign of life after start()');vLastErr='no answer from the microphone';
+    vFail++;vDrop();vNotBefore=Date.now()+V_MIN_GAP;
+    if(vFail>=3){vGiveUp();return;}
+    vArm();
+  },4000);
+}
+// Turning what the phone hears into items. Within one session the phone delivers one growing
+// transcript; this keeps count of the words already turned into items. A pause makes an item.
+var V_DRAFT_MS=400; // an item lands this long after the words stop changing
+function vWords(s){
+  var committed=0,lastId=null,lastStart=0,lastCount=0,lastText='',lastAt=0,tm=null,pending=null;
+  function transcript(e){
+    var parts=[];
+    for(var i=0;i<e.results.length;i++){var t=e.results[i]&&e.results[i][0]?e.results[i][0].transcript:'';if(t)parts.push(t);}
+    return parts.join(' ').replace(/\s+/g,' ').replace(/^ | $/g,'');
+  }
+  function box(v){var mi=document.getElementById('mi');if(mi)mi.value=v;}
+  function retext(id,seg){
+    var it=find(id);
+    if(it&&!it.done){var fixed=fixVoice(seg);it.text=fixed;if(it.category!=='Lukas')it.category=classify(fixed);sv();R();}
+  }
+  function commitTail(words){
+    var tail=words.slice(committed).join(' ');
+    if(!tail)return;
+    var id=commitVoice(tail);
+    if(id){lastId=id;lastStart=committed;lastCount=words.length-committed;lastText=tail;lastAt=Date.now();}
+    committed=words.length;
+    box('');
+  }
+  s.res=function(e){
+    var full=transcript(e);
+    var words=full?full.split(' '):[];
+    if(words.length<committed){committed=0;lastId=null;lastCount=0;lastText='';} // the phone started over
+    // the phone may re-spell words it already gave: correct the last item in place
+    if(lastId&&lastCount>0){
+      var seg0=words.slice(lastStart,lastStart+lastCount).join(' ');
+      if(seg0&&seg0.toLowerCase()!==lastText.toLowerCase()){retext(lastId,seg0);lastText=seg0;}
+    }
+    var last=e.results[e.results.length-1];
+    var isFinal=!!(last&&last.isFinal);
+    var tail=words.slice(committed).join(' ');
+    if(isFinal){
+      var hadPending=(tm!==null);
+      clearTimeout(tm);tm=null;
+      if(hadPending&&tail){
+        commitTail(words); // you were part-way into a new item: it is its own item
+      }else if(lastId&&(Date.now()-lastAt)<3000&&words.length>lastStart){
+        // the final wording of the item just added: correct it in place
+        var seg=words.slice(lastStart).join(' ');
+        if(seg&&seg.toLowerCase()!==lastText.toLowerCase()){retext(lastId,seg);lastText=seg;}
+        lastCount=words.length-lastStart;committed=words.length;
+      }else{
+        commitTail(words);
+      }
+    }else{
+      box(tail);
+      clearTimeout(tm);tm=null;
+      pending=words;
+      if(tail){tm=setTimeout(function(){tm=null;commitTail(words);},V_DRAFT_MS);}
+    }
+  };
+  s.flush=function(){if(tm!==null){clearTimeout(tm);tm=null;if(pending)commitTail(pending);}};
+}
+// Words the phone often mishears for groceries
+var VFIX={'breath':'bread','bred':'bread','brad':'bread','flower':'flour','meet':'meat','chilly':'chilli','pairs':'pears','pair':'pear','beats':'beets','leaks':'leeks','leak':'leek','time':'thyme','tuner':'tuna','sammon':'salmon','rise':'rice','yoga':'yogurt','paster':'pasta','mild':'milk','cheers':'cheese','aches':'eggs','been':'bean','gem':'jam','tee':'tea','coughing':'coffee','waiter':'water','whine':'wine','bear':'beer','lemmon':'lemon','union':'onion','karat':'carrot','carat':'carrot','salary':'celery','kail':'kale','hunny':'honey','serial':'cereal','ships':'chips','knots':'nuts','tomato\'s':'tomatoes','potato\'s':'potatoes','cellery':'celery','bagel\'s':'bagels','yoghurt':'yogurt','pepper\'s':'peppers','olive\'s':'olives','mushroom\'s':'mushrooms','avocado\'s':'avocados'};
+var VFIXP=[['but her','butter'],['all live','olive'],['all lives','olives'],['orange use','orange juice'],['apple use','apple juice'],['to mate oh','tomato'],['dish washer','dishwasher'],['tooth paste','toothpaste']];
+function fixVoice(tx){
+  var t=' '+String(tx).toLowerCase().replace(/\s+/g,' ').replace(/^ | $/g,'')+' ';
+  for(var i=0;i<VFIXP.length;i++){t=t.split(' '+VFIXP[i][0]+' ').join(' '+VFIXP[i][1]+' ');}
+  var words=t.replace(/^ | $/g,'').split(' ');
+  for(var j=0;j<words.length;j++){if(VFIX.hasOwnProperty(words[j]))words[j]=VFIX[words[j]];}
+  var out=words.join(' ');
+  return out.charAt(0).toUpperCase()+out.slice(1);
+}
+var lastVoiceText='',lastVoiceAt=0;
+function commitVoice(tx){
+  tx=fixVoice(tx);
+  var now=Date.now();
+  if(tx.toLowerCase()===lastVoiceText.toLowerCase()&&(now-lastVoiceAt)<2500)return null; // the same words delivered twice
+  lastVoiceText=tx;lastVoiceAt=now;
+  var it=addItem(tx,null,true);
+  vlog('item');
+  return it.id;
+}
+// iPhone Safari kills the microphone when the page goes to the background: show it as off
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible'&&listening){vlog('page hidden');vOff();}
+});
+
+// ---- Is there a newer version? ----
+// The page can sit in the phone's cache after an update. Ask the server (uncached) which build is
+// current; if it is not this one, offer a one-tap update.
+function checkBuild(){
+  try{
+    var x=new XMLHttpRequest();
+    x.open('GET','version.json?t='+Date.now(),true);
+    x.onload=function(){
+      try{var j=JSON.parse(x.responseText);if(j&&j.build&&j.build!==BUILD)showUpdate(String(j.build));}catch(e){}
+    };
+    x.send();
+  }catch(e){}
+}
+function showUpdate(b){
+  if(document.getElementById('updbar'))return;
+  var d=document.createElement('div');d.id='updbar';d.className='bar';
+  d.textContent='New version available - tap here to update';
+  d.onclick=function(){try{location.replace(location.pathname+'?b='+encodeURIComponent(b));}catch(e){}};
+  document.body.appendChild(d);
+}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')checkBuild();});
+
+// ---- Start ----
+ld();
+listenInbox();
+R();
+checkBuild();
+
+</script>
+</body>
+</html>
